@@ -2,44 +2,315 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Portfólio</title>
-<meta name="theme-color" content="#1F3546">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Portfólio">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1B2A41">
+<title>Portfólio</title>
 <style>
-  html,body{margin:0;height:100%;background:#1F3546;overflow:hidden}
-  iframe{border:0;width:100%;height:100%;display:block;background:#F4F1EC}
-  #wrap{position:fixed;inset:0;padding-top:env(safe-area-inset-top);box-sizing:border-box;background:#1F3546}
-  #ajuda{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#fff;font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:#1F3546}
-  #ajuda a,#ajuda button{display:inline-block;background:#fff;color:#1F3546;border:0;border-radius:12px;padding:12px 18px;font-weight:700;text-decoration:none;font-size:15px}
-  #ajuda small{opacity:.75}
-  #carregar{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font:14px -apple-system,Segoe UI,Roboto,sans-serif;background:#1F3546;pointer-events:none;transition:opacity .3s}
+  :root{--bg:#F3F2EE;--card:#FFF;--ink:#1E2730;--muted:#6C757D;--line:#E2DFD8;--accent:#1B2A41;--accent-2:#3E6A8A;--soft:#E6EDF3;--good:#1E7F4F;--bad:#C0392B;--r:14px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  button,input,select{font:inherit;color:inherit}
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px 110px}
+  header{background:var(--accent);color:#fff;padding:18px 16px 58px}
+  header .top{max-width:560px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+  header h1{font-size:18px;margin:0;font-weight:650;white-space:nowrap}
+  .olho{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+  body.oculto .priv{filter:blur(9px);user-select:none}
+  .priv{transition:filter .15s}
+  .stats{max-width:560px;margin:-46px auto 14px;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--card);border-radius:var(--r);padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .stat small{display:block;color:var(--muted);font-size:12px}
+  .stat b{font-size:18px;font-variant-numeric:tabular-nums;font-weight:650}
+  .stat.main{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+  .stat.main b{font-size:26px}
+  .neg{color:var(--bad)} .pos{color:var(--good)}
+  .card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  h2{font-size:16px;margin:0 0 12px;font-weight:650;display:flex;justify-content:space-between;align-items:center}
+  h2 small{font-weight:400;color:var(--muted);font-size:12px}
+  label.l{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  input.f,select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#FBFAF8;outline:0}
+  input.f:focus,select.f:focus{border-color:var(--accent-2);background:#fff}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .pills{display:flex;flex-wrap:wrap;gap:7px}
+  .pill{border:1px solid var(--line);background:#FBFAF8;border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer}
+  .pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn{width:100%;margin-top:18px;border:0;border-radius:12px;padding:15px;background:var(--accent);color:#fff;font-weight:650;font-size:16px;cursor:pointer}
+  .btn.sec{background:var(--soft);color:var(--accent);margin-top:10px}
+  .btn:disabled{opacity:.5}
+  .cat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+  .cat:first-of-type{border-top:0}
+  .cat small{display:block;color:var(--muted);font-size:12px}
+  .cat b{font-variant-numeric:tabular-nums}
+  .bar{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin-top:6px}
+  .bar i{display:block;height:100%;background:var(--accent-2)}
+  .bar i.alvo{background:none;border-right:2px solid var(--ink);height:100%;position:relative;top:-6px}
+  .pos-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+  .pos-row .n{font-weight:600}
+  .pos-row .s{color:var(--muted);font-size:12px}
+  .pos-row .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .pos-row .p{text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
+  .w{display:inline-block;background:var(--soft);color:var(--accent);border-radius:6px;padding:1px 6px;font-size:11px;margin-left:6px}
+  .grp{font-size:12px;color:var(--muted);margin:14px 0 2px;text-transform:uppercase;letter-spacing:.3px;font-weight:600;display:flex;justify-content:space-between}
+  .lista{list-style:none;margin:0;padding:0}
+  .lista li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .lista li:first-child{border-top:0}
+  .lista .q{flex:1;min-width:0}.lista .q div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lista .q small{color:var(--muted);font-size:12px}
+  .lista .v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .x{border:0;background:none;color:var(--muted);font-size:18px;width:32px;height:32px;border-radius:8px;cursor:pointer}
+  .x.conf{background:var(--bad);color:#fff;font-size:12px;width:auto;padding:0 10px}
+  .nota{font-size:12px;color:var(--muted);margin-top:10px}
+  svg.chart{width:100%;height:150px;display:block;margin-top:8px}
+  nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+  nav .in{display:flex;max-width:560px;width:100%}
+  nav button{flex:1;border:0;background:none;padding:9px 0 10px;font-size:11px;color:var(--muted);cursor:pointer}
+  nav button .i{display:block;font-size:19px;line-height:1.25}
+  nav button.on{color:var(--accent);font-weight:650}
+  .tab{display:none}.tab.on{display:block}
+  .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;display:flex;gap:14px;align-items:center;transition:.2s;max-width:92%;z-index:9;pointer-events:none}
+  .toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
+  .toast.erro{background:var(--bad)}
+  .toast button{border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:6px 10px;font-weight:600;cursor:pointer}
+  .load{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--muted);z-index:20}
+  .load.off{display:none}
+  #login{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;z-index:30;text-align:center}
+  #login.on{display:flex}
+  #login button{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 20px;background:#fff;color:var(--ink);font-weight:600;font-size:16px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  #login .err{color:#B3261E;font-size:14px;max-width:320px}
+  #sair{position:fixed;top:0;right:0;width:40px;height:40px;opacity:0;z-index:5}
+
+
+  .filtro{display:flex;gap:6px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none}
+  .filtro button{flex:none;border:1px solid var(--line);background:#FBFAF8;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+  .filtro button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
-<body>
-<div id="wrap"><iframe id="app" src="https://script.google.com/macros/s/AKfycbyuoRO7OlCts9wZAI_Oo_UmfONBa0RNaljEgWa6-DBuY84cU3qnkr00QzQwMhyIeo_p/exec" allow="clipboard-write" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-<div id="carregar">A abrir Portfólio…</div>
-<div id="ajuda">
-  <b style="font-size:18px">Precisas de iniciar sessão na Google</b>
-  <span>Toca no botão, entra com a tua conta, e depois volta a abrir a app.</span>
-  <a href="https://script.google.com/macros/s/AKfycbyuoRO7OlCts9wZAI_Oo_UmfONBa0RNaljEgWa6-DBuY84cU3qnkr00QzQwMhyIeo_p/exec" target="_blank" rel="noopener">Iniciar sessão</a>
-  <button onclick="location.reload()">Já entrei — recarregar</button>
-  <small>Isto só acontece na primeira vez ou quando a sessão Google expira.</small>
+<body class="oculto">
+<div class="load" id="load">A carregar…</div>
+<div id="login"><b style="font-size:20px">Portfólio</b><span style="color:var(--muted)">Entra com a tua conta Google</span>
+  <button id="btnGoogle"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.8 6C12.3 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.7-4.1-13.6-9.9l-7.8 6C6.5 42.6 14.6 48 24 48z"/></svg>Entrar com o Google</button>
+  <div class="err" id="loginErr"></div></div>
+
+
+<header><div class="top"><h1>Portfólio</h1><button class="olho" id="olho">👁 Mostrar</button></div></header>
+<div class="stats">
+  <div class="stat main"><div><small>Valor do portfólio</small><b class="priv" id="sValor">–</b></div><div style="text-align:right"><small>P/L latente</small><b class="priv" id="sPL" style="font-size:17px">–</b><small class="priv" id="sPLp"></small></div></div>
+  <div class="stat"><small>Mais-valias realizadas</small><b class="priv" id="sReal">–</b></div>
+  <div class="stat"><small>Dividendos + juros</small><b class="priv" id="sDiv">–</b></div>
 </div>
+
+<div class="wrap">
+  <!-- CARTEIRA -->
+  <section class="tab on" id="t-cart">
+    <div class="card"><h2>Por categoria <small>peso real · alvo</small></h2><div class="priv" id="cCats"></div></div>
+    <div class="card"><h2>Posições <small id="cN"></small></h2>
+      <div class="filtro" id="cFiltro"></div>
+      <div class="priv" id="cPos"></div>
+    </div>
+    <div class="card"><h2>Por conta</h2><div class="priv" id="cContas"></div></div>
+  </section>
+
+  <!-- LANÇAR -->
+  <section class="tab" id="t-lan">
+    <div class="card">
+      <label class="l">Tipo</label><div class="pills" id="lTipo"></div>
+      <label class="l">Ativo (ticker)</label>
+      <input class="f" id="lAtivo" list="dlAtivos" placeholder="BTC, IWDA, BRK.B…" autocomplete="off"><datalist id="dlAtivos"></datalist>
+      <div class="nota" id="lAtivoInfo"></div>
+      <div class="row2">
+        <div><label class="l">Conta</label><select class="f" id="lConta"></select></div>
+        <div><label class="l">Data</label><input class="f" type="date" id="lData"></div>
+      </div>
+      <div class="row3">
+        <div><label class="l" id="lQtdL">Quantidade</label><input class="f" id="lQtd" inputmode="decimal"></div>
+        <div><label class="l" id="lPrecoL">Preço (un.)</label><input class="f" id="lPreco" inputmode="decimal"></div>
+        <div><label class="l">Moeda</label><select class="f" id="lMoeda"></select></div>
+      </div>
+      <div class="row2">
+        <div><label class="l">Câmbio → €</label><input class="f" id="lCambio" inputmode="decimal" placeholder="vazio = taxa atual"></div>
+        <div><label class="l">Comissão (€)</label><input class="f" id="lCom" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="nota" id="lTotal"></div>
+      <label class="l">Notas</label><input class="f" id="lNotas" placeholder="Opcional">
+      <button class="btn" id="lGuardar">Guardar</button>
+      <p class="nota">Ativo novo? Acrescenta-o primeiro na folha (abas Ativos e Preços).</p>
+    </div>
+    <div class="card"><h2>Últimas transações</h2><ul class="lista priv" id="lRec"></ul></div>
+  </section>
+
+  <!-- ATUALIZAR -->
+  <section class="tab" id="t-upd">
+    <div class="card">
+      <h2>Preços</h2>
+      <p class="nota">Ações e ETF atualizam sozinhos (Google Finance). Cripto vem do CoinGecko: <span id="uQuando"></span></p>
+      <button class="btn" id="uCripto">Atualizar cripto + recalcular</button>
+      <button class="btn sec" id="uSnap">Guardar snapshot no Histórico</button>
+    </div>
+    <div class="card"><h2>Evolução <small>snapshots</small></h2><svg class="chart priv" id="uChart" viewBox="0 0 360 150" preserveAspectRatio="none"></svg><div class="nota" id="uNota"></div></div>
+    <div class="card"><h2>Exposição cambial</h2><div class="priv" id="uMoedas"></div></div>
+  </section>
+</div>
+
+<nav><div class="in">
+  <button class="on" data-tab="t-cart"><span class="i">◔</span>Carteira</button>
+  <button data-tab="t-lan"><span class="i">＋</span>Lançar</button>
+  <button data-tab="t-upd"><span class="i">↻</span>Atualizar</button>
+</div></nav>
+<div class="toast" id="toast"><span id="toastTxt"></span><button id="toastUndo">Anular</button></div>
+
 <script>
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-  const f = document.getElementById('app'), c = document.getElementById('carregar'), h = document.getElementById('ajuda');
-  let ok = false;
-  f.addEventListener('load', () => { ok = true; c.style.opacity = 0; setTimeout(()=>c.style.display='none', 350); });
-  // Se a app não carregar em 12 s, é quase sempre a sessão Google em falta (a página de login não abre dentro de uma app).
-  setTimeout(() => { if (!ok) { c.style.display = 'none'; h.style.display = 'flex'; } }, 12000);
-  // Botão "Ajuda" discreto: tocar 3x no topo mostra o ecrã de sessão
-  let taps = 0; document.getElementById('wrap').addEventListener('click', e => { if (e.clientY < 30 && ++taps >= 3) { h.style.display = 'flex'; taps = 0; } });
+const $ = id => document.getElementById(id);
+const eur = v => (typeof v === 'number' ? v : 0).toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
+const pct = v => typeof v === 'number' ? (v*100).toFixed(1).replace('.', ',') + '%' : '–';
+const sgn = v => (v > 0 ? '+' : '') + eur(v);
+let D = null, ultimo = null, tipo = 'Compra', filtro = 'Todas';
+function hoje(){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function fmtData(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y.slice(2); }
+function num(v){ if (v===''||v==null) return ''; const n = Number(String(v).replace(/\s|€/g,'').replace(',','.')); return isFinite(n) ? n : ''; }
+function toast(msg, undo, erro){ $('toastTxt').textContent = msg; $('toastUndo').style.display = undo ? '' : 'none';
+  const t=$('toast'); t.classList.toggle('erro', !!erro); t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), undo ? 6000 : 3500); }
+const cls = v => v > 0.004 ? 'pos' : v < -0.004 ? 'neg' : '';
+
+function render(){
+  const k = D.kpi;
+  $('sValor').textContent = eur(k.valor);
+  $('sPL').textContent = sgn(k.pl); $('sPL').className = 'priv ' + cls(k.pl); $('sPLp').textContent = typeof k.plPct==='number' ? pct(k.plPct) + ' sobre o custo' : '';
+  $('sReal').textContent = sgn(k.realizado); $('sReal').className = 'priv ' + cls(k.realizado);
+  $('sDiv').textContent = sgn(k.div); $('sDiv').className = 'priv ' + cls(k.div);
+  // categorias
+  $('cCats').innerHTML = D.cats.filter(c => c.valor > 0).map(c => `
+    <div class="cat" data-cat="${c.nome}"><div style="flex:1"><div>${c.nome} <span class="w">${c.n}</span><small>${pct(c.peso)} · alvo ${pct(c.alvo)} ${typeof c.desvio==='number' && Math.abs(c.desvio)>0.05 ? `<span class="${c.desvio>0?'neg':'pos'}">(${c.desvio>0?'+':''}${pct(c.desvio)})</span>` : ''}</small></div>
+      <div class="bar"><i style="width:${Math.min(100,(c.peso||0)*100)}%"></i></div></div>
+      <div style="text-align:right;margin-left:12px"><b>${eur(c.valor)}</b><small class="${cls(c.pl)}">${sgn(c.pl)} (${pct(c.plPct)})</small></div></div>`).join('');
+  $('cCats').querySelectorAll('.cat').forEach(e => e.onclick = () => { filtro = e.dataset.cat; renderPos(); document.querySelector('#cPos').scrollIntoView({behavior:'smooth'}); });
+  const cats = ['Todas', ...D.cats.filter(c => c.valor>0).map(c=>c.nome)];
+  $('cFiltro').innerHTML = cats.map(c => `<button class="${c===filtro?'on':''}" data-c="${c}">${c}</button>`).join('');
+  $('cFiltro').querySelectorAll('button').forEach(b => b.onclick = () => { filtro = b.dataset.c; renderPos(); });
+  renderPos();
+  $('cContas').innerHTML = D.contas.map(c => `<div class="cat"><div>${c.nome}<small>${pct(c.peso)} do total</small></div><div style="text-align:right"><b>${eur(c.valor)}</b><small class="${cls(c.pl)}">${sgn(c.pl)}</small></div></div>`).join('');
+  // lançar
+  $('lTipo').innerHTML = D.listas.tipos.map(t => `<button type="button" class="pill ${t===tipo?'on':''}">${t}</button>`).join('');
+  $('lTipo').querySelectorAll('button').forEach(b => b.onclick = () => { tipo = b.textContent; render(); });
+  $('dlAtivos').innerHTML = D.ativos.map(a => `<option value="${a.t}">${a.nome} · ${a.cat} · ${a.moeda}</option>`).join('');
+  $('lConta').innerHTML = D.listas.contas.map(c => `<option>${c}</option>`).join('');
+  $('lMoeda').innerHTML = D.listas.moedas.map(m => `<option>${m}</option>`).join('');
+  const movQtd = ['Compra','Venda','Posição inicial','Ajuste'].indexOf(tipo) >= 0;
+  $('lQtd').parentElement.style.visibility = movQtd ? '' : 'hidden';
+  $('lPrecoL').textContent = movQtd ? 'Preço (un.)' : (tipo==='Ajuste' ? 'Preço' : 'Valor');
+  $('lRec').innerHTML = D.recentes.map(r => `<li><div class="q"><div><b>${r.tipo}</b> ${r.ativo}${r.qtd?' · '+r.qtd:''}${r.preco?' @ '+r.preco+' '+r.moeda:''}</div><small>${fmtData(r.data)} · ${r.conta||''}${typeof r.pl==='number' ? ` · <span class="${cls(r.pl)}">${sgn(r.pl)} realizado</span>` : ''}</small></div><span class="v">${eur(r.total)}</span><button class="x" data-row="${r.row}">×</button></li>`).join('') || '<li class="nota">Sem transações.</li>';
+  $('lRec').querySelectorAll('.x').forEach(x => x.onclick = () => { if (!x.classList.contains('conf')){ x.classList.add('conf'); x.textContent='Apagar?'; setTimeout(()=>{x.classList.remove('conf'); x.textContent='×';},3000); return; }
+    api('anularTransacao', x.dataset.row).then(r => { D = r.dados; render(); toast('Apagada'); }).catch(e => toast(e,false,true)); });
+  // atualizar
+  $('uQuando').textContent = D.criptoAtualizado ? 'última atualização ' + D.criptoAtualizado : 'ainda não atualizado';
+  $('uMoedas').innerHTML = D.moedas.map(m => `<div class="cat"><div>${m.nome}</div><div style="text-align:right"><b>${eur(m.valor)}</b><small>${pct(m.peso)}</small></div></div>`).join('');
+  const h = D.hist; const W=360, Hh=150;
+  if (h.length >= 2){ const vals = h.map(x=>x.total), min = Math.min(...vals)*0.97, max = Math.max(...vals)*1.03;
+    const pts = h.map((x,i) => `${8 + i*(W-16)/(h.length-1)},${Hh-10-(x.total-min)/(max-min)*(Hh-30)}`).join(' ');
+    $('uChart').innerHTML = `<polyline points="${pts}" fill="none" stroke="#3E6A8A" stroke-width="2"/>` + h.map((x,i) => `<circle cx="${8 + i*(W-16)/(h.length-1)}" cy="${Hh-10-(x.total-min)/(max-min)*(Hh-30)}" r="3" fill="#1B2A41"/>`).join('');
+    $('uNota').textContent = `${fmtData(h[0].d)}: ${eur(h[0].total)} → ${fmtData(h[h.length-1].d)}: ${eur(h[h.length-1].total)} (${sgn(h[h.length-1].total-h[0].total)})`;
+  } else { $('uChart').innerHTML = ''; $('uNota').textContent = h.length ? `1 snapshot (${fmtData(h[0].d)}: ${eur(h[0].total)}). Guarda mais para ver a evolução.` : 'Ainda sem snapshots.'; }
+  calcTotal();
+}
+function renderPos(){
+  const lista = D.ativos.filter(a => a.qtd > 0.0000001 && (filtro==='Todas' || a.cat===filtro)).sort((a,b) => (b.valor||0)-(a.valor||0));
+  $('cN').textContent = lista.length + ' posições';
+  $('cFiltro').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.c===filtro));
+  let html = '', grp = null;
+  lista.forEach(a => {
+    if (filtro==='Todas' && a.cat !== grp){ grp = a.cat; const c = D.cats.find(x=>x.nome===grp); html += `<div class="grp"><span>${grp}</span><span>${c?eur(c.valor):''}</span></div>`; }
+    const semPreco = String(a.fonte||'').startsWith('⚠');
+    html += `<div class="pos-row"><div class="n">${a.nome} <span class="w">${pct(filtro==='Todas'?a.peso:a.pesoCat)}</span></div><div class="v">${eur(a.valor)}</div>
+      <div class="s">${a.t} · ${(+a.qtd).toLocaleString('pt-PT',{maximumFractionDigits:6})} un. · ${a.conta}${semPreco ? ' · <span class="neg">sem preço</span>' : ''}</div>
+      <div class="p ${cls(a.pl)}">${sgn(a.pl)}${typeof a.plPct==='number' ? ' ('+pct(a.plPct)+')' : ''}</div></div>`;
+  });
+  $('cPos').innerHTML = html || '<div class="nota">Nada nesta categoria.</div>';
+}
+function calcTotal(){
+  const a = D.ativos.find(x => x.t === $('lAtivo').value.trim().toUpperCase());
+  $('lAtivoInfo').textContent = a ? `${a.nome} · ${a.cat} · tens ${(+a.qtd).toLocaleString('pt-PT',{maximumFractionDigits:6})} a ${eur(a.medio)} médio` : '';
+  if (a && !$('lMoeda').dataset.user) $('lMoeda').value = a.moeda;
+  const q = num($('lQtd').value), p = num($('lPreco').value), m = $('lMoeda').value, c = num($('lCambio').value), com = num($('lCom').value) || 0;
+  const fx = c !== '' ? c : (D.fx[m] || 1);
+  let tot = '';
+  if (['Compra','Venda','Posição inicial'].indexOf(tipo)>=0 && q!=='' && p!=='') tot = q*p*fx + (tipo==='Venda' ? -com : com);
+  else if (p!=='' && ['Dividendo','Juros','Depósito','Imposto','Taxa','Levantamento'].indexOf(tipo)>=0) tot = p*fx;
+  $('lTotal').textContent = tot !== '' ? `Total: ${eur(tot)}${m!=='EUR' ? ` (câmbio ${fx.toFixed(4)})` : ''}` : '';
+}
+['lAtivo','lQtd','lPreco','lCambio','lCom'].forEach(id => $(id).addEventListener('input', calcTotal));
+$('lMoeda').addEventListener('change', () => { $('lMoeda').dataset.user = '1'; calcTotal(); });
+$('lGuardar').onclick = () => {
+  const o = { data:$('lData').value, tipo, ativo:$('lAtivo').value.trim().toUpperCase(), conta:$('lConta').value, qtd:$('lQtd').value, preco:$('lPreco').value, moeda:$('lMoeda').value, cambio:$('lCambio').value, comissao:$('lCom').value, notas:$('lNotas').value };
+  $('lGuardar').disabled = true;
+  api('addTransacao', o).then(r => { D = r.dados; ultimo = r.row; ['lQtd','lPreco','lCambio','lCom','lNotas'].forEach(id => $(id).value=''); render(); toast(tipo + ' guardada', true); })
+    .catch(e => toast(String(e), false, true)).finally(() => $('lGuardar').disabled = false);
+};
+$('toastUndo').onclick = () => { if (!ultimo) return; const u = ultimo; ultimo = null; $('toast').classList.remove('on');
+  api('anularTransacao', u).then(r => { D = r.dados; render(); toast('Anulada'); }).catch(e => toast(e,false,true)); };
+$('uCripto').onclick = () => { $('uCripto').disabled = true; toast('A atualizar…');
+  api('atualizarTudo').then(r => { D = r.dados; render(); toast(r.msg || 'Atualizado'); }).catch(e => toast(String(e),false,true)).finally(()=> $('uCripto').disabled=false); };
+$('uSnap').onclick = () => { api('snapshotApp').then(r => { D = r.dados; render(); toast('Snapshot guardado'); }).catch(e => toast(String(e),false,true)); };
+$('olho').onclick = () => { const o = document.body.classList.toggle('oculto'); $('olho').textContent = o ? '👁 Mostrar' : '🙈 Esconder'; };
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => { document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x===b)); document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id===b.dataset.tab)); window.scrollTo(0,0); });
+function init(){ $('lData').value = hoje(); api('getDados').then(d => { D = d; render(); $('load').classList.add('off'); }).catch(e => $('load').textContent = 'Erro: ' + e); }
+
+/* ---------- dados de exemplo (só fora do Google) ---------- */
+
+
+/* ---------- Ligação ao servidor + login Google ---------- */
+const EXEC = 'https://script.google.com/macros/s/AKfycbyuoRO7OlCts9wZAI_Oo_UmfONBa0RNaljEgWa6-DBuY84cU3qnkr00QzQwMhyIeo_p/exec';
+const CLIENT_ID = '645120347152-evo9tis7vb093lsr6415mi5u7onoadhk.apps.googleusercontent.com';
+const REDIRECT = 'https://goncalojacinto1.github.io/financas-apps/portfolio/';
+let TOKEN = null, EMAIL = '';
+try { TOKEN = localStorage.getItem('g_id_token'); EMAIL = localStorage.getItem('g_email') || ''; } catch(e) {}
+function jwt_(t){ try { return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch(e){ return {}; } }
+function guardarToken(t){ TOKEN = t; try { if (t) { localStorage.setItem('g_id_token', t); const j = jwt_(t); if (j.email) { EMAIL = j.email; localStorage.setItem('g_email', j.email); } } else localStorage.removeItem('g_id_token'); } catch(e) {} }
+function tokenValido(){ if (!TOKEN) return false; const j = jwt_(TOKEN); return j.exp && j.exp * 1000 > Date.now() + 30000; }
+function irParaGoogle(silencioso){
+  const u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  u.searchParams.set('client_id', CLIENT_ID); u.searchParams.set('redirect_uri', REDIRECT);
+  u.searchParams.set('response_type', 'id_token'); u.searchParams.set('scope', 'openid email');
+  u.searchParams.set('nonce', Math.random().toString(36).slice(2) + Date.now());
+  if (silencioso && EMAIL) { u.searchParams.set('prompt', 'none'); u.searchParams.set('login_hint', EMAIL); }
+  else u.searchParams.set('prompt', 'select_account');
+  try { sessionStorage.setItem('g_tentou', silencioso ? '1' : '0'); } catch(e) {}
+  location.replace(u.toString());
+}
+function mostrarLogin(msg){ document.getElementById('login').classList.add('on'); document.getElementById('load').classList.add('off'); document.getElementById('loginErr').textContent = msg || ''; }
+document.getElementById('btnGoogle').onclick = () => irParaGoogle(false);
+function api(fn, ...args){
+  return new Promise(async (res, rej) => {
+    if (!tokenValido()) { guardarToken(null); mostrarLogin(''); return rej('Sessão expirada — entra outra vez.'); }
+    try {
+      const r = await fetch(EXEC, { method: 'POST', body: JSON.stringify({ token: TOKEN, fn, args }), redirect: 'follow' });
+      const j = await r.json();
+      if (!j.ok) { if (/^AUTH:/.test(j.erro || '')) { guardarToken(null); mostrarLogin(j.erro.replace(/^AUTH:\s*/, '')); } return rej(j.erro || 'Erro'); }
+      res(j.dados);
+    } catch (e) { rej('Sem ligação ao servidor (' + (e && e.message ? e.message : e) + ')'); }
+  });
+}
+function arranque(){
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+  if (h.get('id_token')) { guardarToken(h.get('id_token')); history.replaceState(null, '', location.pathname + location.search); }
+  else if (h.get('error')) {
+    history.replaceState(null, '', location.pathname + location.search);
+    let tentouSilencioso = false; try { tentouSilencioso = sessionStorage.getItem('g_tentou') === '1'; } catch(e) {}
+    if (!tentouSilencioso) return mostrarLogin('Não foi possível entrar: ' + h.get('error'));
+    return mostrarLogin('');
+  }
+  if (tokenValido()) return init();
+  if (EMAIL) return irParaGoogle(true);   // já entrou antes: renova a sessão sem perguntar nada
+  mostrarLogin('');
+}
+arranque();
+
 </script>
 </body>
 </html>
