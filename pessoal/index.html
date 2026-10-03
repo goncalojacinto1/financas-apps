@@ -101,6 +101,7 @@
   svg.chart{width:100%;height:170px;display:block;margin-top:8px}
   table.hist tr.sel td{background:var(--soft)} table.hist tr[data-k]{cursor:pointer}
   .pos{color:var(--good)} .neg{color:var(--bad)}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-top:1px solid var(--line);font-size:14px} .kv:first-child{border-top:0} .kv b{font-variant-numeric:tabular-nums}
   table.hist{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
   table.hist th{color:var(--muted);font-weight:600;text-align:right;padding:4px 3px;border-bottom:1px solid var(--line)}
   table.hist td{text-align:right;padding:5px 3px;border-bottom:1px solid var(--line)}
@@ -225,6 +226,18 @@
   <!-- FECHO -->
   <!-- HISTÓRICO -->
   <section class="tab" id="t-hist">
+    <div class="card">
+      <h2>Combustível <small id="fbTot"></small></h2>
+      <div class="row2" style="margin-bottom:10px">
+        <div class="stat" style="padding:10px 12px"><small>Este mês</small><b class="priv" id="fbMes" style="font-size:17px">–</b></div>
+        <div class="stat" style="padding:10px 12px"><small>Média / mês (12 m)</small><b class="priv" id="fbMedia" style="font-size:17px">–</b></div>
+      </div>
+      <div class="priv" id="fbSplit"></div>
+      <svg class="chart priv" id="fbChart" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
+      <div class="nota" id="fbNota"></div>
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--accent-2);font-weight:600;font-size:13px">Últimos abastecimentos</summary><ul class="lista priv" id="fbLista" style="margin-top:6px"></ul></details>
+      <p class="nota">A app separa pela categoria ou pela palavra "gasóleo" / "gasolina" na descrição ou notas. Se escreveres os litros ("32 L"), também os soma.</p>
+    </div>
     <div class="card">
       <h2>Comparar meses</h2>
       <div class="row2">
@@ -358,7 +371,7 @@ function itemLista(l1, l2, valor, rows){
   x.onclick = () => {
     if (!x.classList.contains('conf')){ x.classList.add('conf'); x.textContent='Apagar?'; setTimeout(()=>{x.classList.remove('conf'); x.textContent='×';},3000); return; }
     x.disabled = true;
-    api('anular', rows).then(r => { D = r.dados; H = null; render(); toast('Apagado'); }).catch(e => toast(e,false,true));
+    api('anular', rows).then(r => { D = r.dados; H = null; FB = null; render(); toast('Apagado'); }).catch(e => toast(e,false,true));
   };
   return li;
 }
@@ -373,13 +386,13 @@ $('mGuardar').onclick = () => {
               valor:$('mValor').value, origem: st.tipo==='Receita' ? '' : st.orig, destino: st.tipo==='Despesa' ? '' : st.dest, notas:$('mNotas').value };
   $('mGuardar').disabled = true;
   api('addMovimento', o).then(r => {
-    D = r.dados; H = null; ultimo = r.rows; $('mValor').value=''; $('mDesc').value=''; $('mNotas').value=''; $('mCat').value='';
+    D = r.dados; H = null; FB = null; ultimo = r.rows; $('mValor').value=''; $('mDesc').value=''; $('mNotas').value=''; $('mCat').value='';
     render(); toast(st.tipo + ' guardada', true); $('mValor').focus();
   }).catch(e => toast(String(e), false, true)).finally(() => $('mGuardar').disabled = false);
 };
 $('toastUndo').onclick = () => {
   if (!ultimo) return; const u = ultimo; ultimo = null; $('toast').classList.remove('on');
-  api('anular', u).then(r => { D = r.dados; H = null; render(); toast('Anulado'); }).catch(e => toast(e,false,true));
+  api('anular', u).then(r => { D = r.dados; H = null; FB = null; render(); toast('Anulado'); }).catch(e => toast(e,false,true));
 };
 
 /* ---------------- recibo ---------------- */
@@ -466,7 +479,7 @@ $('rGuardar').onclick = () => {
   if (!num($('rLiq').value)) return toast('Falta o líquido recebido', false, true);
   $('rGuardar').disabled = true;
   api('guardarRecibo', { mes:Number($('rMes').value), data:$('rData').value, campos:lerRecibo(), destinos:dest, registarReceitas:$('rcRec').checked, registarTransf:$('rcTr').checked })
-    .then(r => { D = r.dados; H = null; ultimo = r.rows.length ? r.rows : null; render(); carregarReciboMes();
+    .then(r => { D = r.dados; H = null; FB = null; ultimo = r.rows.length ? r.rows : null; render(); carregarReciboMes();
       toast(r.rows.length ? `Recibo guardado · ${r.rows.length} movimentos lançados` : 'Recibo guardado', !!r.rows.length); })
     .catch(e => toast(String(e), false, true)).finally(() => $('rGuardar').disabled = false);
 };
@@ -522,7 +535,7 @@ $('xMes').onchange = carregarFecho;
 $('xGuardar').onclick = () => {
   const v = {}; document.querySelectorAll('#xGrid input').forEach(i => v[i.dataset.row] = i.value.trim());
   $('xGuardar').disabled = true;
-  api('setFecho', Number($('xMes').value), v).then(r => { D = r.dados; H = null; render(); desenharFecho(r.fecho); toast('Fecho guardado'); })
+  api('setFecho', Number($('xMes').value), v).then(r => { D = r.dados; H = null; FB = null; render(); desenharFecho(r.fecho); toast('Fecho guardado'); })
     .catch(e => toast(e,false,true)).finally(() => $('xGuardar').disabled = false);
 };
 
@@ -531,12 +544,39 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
   document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x===b));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id===b.dataset.tab));
   if (b.dataset.tab==='t-fecho') carregarFecho();
-  if (b.dataset.tab==='t-hist') carregarHistorico();
+  if (b.dataset.tab==='t-hist') { carregarHistorico(); carregarCombustivel(); }
   window.scrollTo(0,0);
 });
 document.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => $('mData').value = hoje(Number(b.dataset.dia)));
 
 $('olho').onclick = () => { const o = document.body.classList.toggle('oculto'); $('olho').textContent = o ? '👁 Mostrar' : '🙈 Esconder'; };
+
+/* ---------- combustível ---------- */
+let FB = null;
+function carregarCombustivel(){ if (FB) { desenharCombustivel(); return; } api('getCombustivel').then(f => { FB = f; desenharCombustivel(); }).catch(e => toast(String(e), false, true)); }
+function desenharCombustivel(){
+  const M = FB.meses, hojeK = hoje().slice(0, 7), ano = hojeK.slice(0, 4);
+  const mesAtual = M.find(m => m.k === hojeK);
+  $('fbMes').textContent = eur(mesAtual ? mesAtual.total : 0);
+  const ult12 = M.filter(m => m.k < hojeK).slice(-12);
+  $('fbMedia').textContent = eur(ult12.length ? ult12.reduce((a, m) => a + m.total, 0) / ult12.length : 0);
+  const anoM = M.filter(m => m.k.startsWith(ano)); const totAno = anoM.reduce((a, m) => a + m.total, 0);
+  $('fbTot').textContent = totAno ? `${eur(totAno)} em ${ano}` : '';
+  const tipos = ['Gasóleo', 'Gasolina', 'Sem indicação'], cores = { 'Gasóleo': '#3E6A8A', 'Gasolina': '#C98A1B', 'Sem indicação': '#B9B3A8' };
+  const porTipo = tipos.map(t => ({ t, v: anoM.reduce((a, m) => a + (m[t] || 0), 0) })).filter(x => x.v > 0);
+  $('fbSplit').innerHTML = porTipo.map(x => `<div class="kv"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${cores[x.t]};margin-right:6px"></i>${x.t} em ${ano}</span><b>${eur(x.v)} <small style="color:var(--muted);font-weight:400">(${Math.round(x.v / totAno * 100)}%)</small></b></div>`).join('') || '<div class="vazio">Sem abastecimentos registados.</div>';
+  // gráfico 12 meses empilhado
+  const serie = M.slice(-12); const max = Math.max(1, ...serie.map(m => m.total)); const W = 360, H = 150, pad = 22, bw = (W - 10) / Math.max(1, serie.length);
+  let svg = `<line x1="0" y1="${H - pad}" x2="${W}" y2="${H - pad}" stroke="#E2DFD8"/>`;
+  serie.forEach((m, i) => { let y = H - pad; const x = 5 + i * bw + 3;
+    tipos.forEach(t => { const v = m[t] || 0; if (!v) return; const h = v / max * (H - pad - 16); y -= h; svg += `<rect x="${x}" y="${y}" width="${bw - 6}" height="${h}" fill="${cores[t]}" rx="2"/>`; });
+    svg += `<text x="${x + (bw - 6) / 2}" y="${H - 6}" font-size="9" text-anchor="middle" fill="#6C757D">${MESES[Number(m.k.slice(5)) - 1].slice(0, 3)}</text>`;
+    svg += `<text x="${x + (bw - 6) / 2}" y="${y - 3}" font-size="8" text-anchor="middle" fill="#1E2730">${Math.round(m.total)}</text>`; });
+  $('fbChart').innerHTML = svg;
+  const litros = anoM.reduce((a, m) => a + (m.litros || 0), 0);
+  $('fbNota').textContent = (anoM.reduce((a, m) => a + m.n, 0) || 0) + ` abastecimentos em ${ano}` + (litros ? ` · ${Math.round(litros)} L (${eur(totAno / litros)}/L)` : '');
+  $('fbLista').innerHTML = FB.itens.slice().reverse().slice(0, 20).map(it => `<li><div class="q"><div>${it.tipo}${it.litros ? ' · ' + it.litros + ' L' : ''}</div><small>${fmtData(it.data)} · ${it.desc}${it.notas ? ' · ' + it.notas : ''}</small></div><span class="v">${eur(it.valor)}</span></li>`).join('') || '<li class="vazio">Nada.</li>';
+}
 
 /* ---------- histórico ---------- */
 let H = null, hSel = null, hSerie = 'despesa';
