@@ -51,6 +51,23 @@
   .stats3{max-width:560px;margin:0 auto 14px;padding:0 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .stats3 .stat{padding:10px 12px} .stats3 .stat b{font-size:15px}
   .stats3 .stat.aviso{grid-column:1/-1;background:#FFF6E5;font-size:12px;color:#7A4B00}
+  /* compras + receitas + mais */
+  .mais{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mais button{border:0;background:var(--card);border-radius:var(--r);padding:18px 12px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-weight:650;color:var(--accent);cursor:pointer;font-size:15px}
+  .mais button .i{display:block;font-size:24px;margin-bottom:4px}
+  .addrow{display:flex;gap:8px} .addrow input{flex:1} .addrow button{border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;padding:0 18px;font-size:20px;cursor:pointer}
+  .chk{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)} .chk:first-child{border-top:0}
+  .chk .box{width:24px;height:24px;border:2px solid var(--accent-2);border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;font-size:15px}
+  .chk.feito .box{background:var(--accent-2)} .chk.feito .t{text-decoration:line-through;color:var(--muted)}
+  .chk .q{flex:1;min-width:0} .chk .q small{display:block;color:var(--muted);font-size:12px} .chk .x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px}
+  .rec{padding:12px 0;border-top:1px solid var(--line);cursor:pointer;display:flex;gap:10px;align-items:center} .rec:first-child{border-top:0}
+  .rec .q{flex:1;min-width:0} .rec .q div{font-weight:600} .rec .q small{color:var(--muted);font-size:12px} .rec .fav{color:#C98A1B;font-size:18px}
+  .pre{white-space:pre-wrap;font-size:14px;line-height:1.5} .pre ol{margin:0;padding-left:20px} .pre li{margin:4px 0}
+  .ing{list-style:none;padding:0;margin:0} .ing li{padding:6px 0;border-top:1px solid var(--line);font-size:14px} .ing li:first-child{border-top:0}
+  .topo{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px} .topo button{border:0;background:var(--soft);color:var(--accent);border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+  textarea.f{min-height:110px;resize:vertical}
+  .ing li.tem{color:var(--good)} .ing li.falta{color:var(--bad)} .ing li .m{display:inline-block;width:18px;font-weight:700}
+  .chip .x{margin-left:6px;opacity:.6} .chip.on{background:var(--accent);color:#fff}
   .linha{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--muted)}
   .linha b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -67,10 +84,11 @@
   .pills{display:flex;flex-wrap:wrap;gap:7px}
   .pill{border:1px solid var(--line);background:#FBFAF8;border-radius:999px;padding:7px 13px;font-size:14px;cursor:pointer;user-select:none}
   .pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
-  .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+  .chips{display:flex;gap:6px;overflow-x:auto;flex-wrap:wrap;padding:8px 0 2px;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
   .chip{flex:none;border:0;background:var(--soft);color:var(--accent);border-radius:999px;padding:6px 11px;font-size:13px;cursor:pointer}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .datas{display:flex;gap:6px;align-items:center}
   .datas input{flex:1}
   .mini{border:1px solid var(--line);background:#FBFAF8;border-radius:8px;padding:9px 10px;font-size:13px;cursor:pointer}
@@ -262,6 +280,84 @@
     <div class="card"><h2>Últimas transferências</h2><ul class="lista" id="lTrf"></ul></div>
   </section>
 
+  <!-- COMPRAS -->
+  <section class="tab" id="t-comp">
+    <div class="card">
+      <h2>Lista de compras <small id="cN"></small></h2>
+      <div class="addrow"><input class="f" id="cItem" placeholder="Ex.: Leite, 2 pacotes" list="dlComp" autocomplete="off"><button id="cAdd" title="Adicionar">+</button></div>
+      <datalist id="dlComp"></datalist>
+      <div class="chips" id="cSug" style="margin-top:10px"></div>
+      <div id="cLista" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>Comprados <small><button id="cLimpar" style="border:0;background:none;color:var(--accent-2);font-weight:600;cursor:pointer">limpar</button></small></h2>
+      <div id="cFeitos"></div>
+      <p class="nota">Toca num item comprado para o voltar a pôr na lista. O que marcas como comprado entra na despensa.</p>
+    </div>
+    <div class="card">
+      <h2>Despensa <small id="dN"></small></h2>
+      <div class="addrow"><input class="f" id="dItem" placeholder="O que temos em casa: arroz, azeite…" autocomplete="off"><button id="dAdd" title="Adicionar">+</button></div>
+      <div class="chips" id="dLista" style="margin-top:10px"></div>
+      <p class="nota">Serve para as receitas dizerem o que já temos e o que falta. Toca no × quando acabar.</p>
+    </div>
+  </section>
+
+  <!-- RECEITAS BIMBY -->
+  <section class="tab" id="t-bim">
+    <div id="bLista">
+      <div class="card">
+        <div class="topo"><h2 style="margin:0">Receitas <small id="bN"></small></h2><button id="bNova">+ Nova</button></div>
+        <input class="f" id="bBusca" placeholder="Procurar por nome ou ingrediente…" autocomplete="off">
+        <div class="chips" id="bTipos" style="margin-top:8px"></div>
+        <div id="bItems" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div id="bVer" style="display:none">
+      <div class="card">
+        <div class="topo"><button id="bVoltar">‹ Receitas</button><div><button id="bEditar">Editar</button> <button id="bFav">☆</button></div></div>
+        <h2 id="bvNome" style="font-size:20px"></h2>
+        <div class="nota" id="bvMeta" style="margin-top:-6px"></div>
+        <h3 style="font-size:14px;margin:14px 0 6px">Ingredientes</h3>
+        <ul class="ing" id="bvIng"></ul>
+        <div class="nota" id="bvFalta" style="margin-top:8px"></div>
+        <button class="btn sec" id="bvCompras">Mandar o que falta para a lista de compras</button>
+        <h3 style="font-size:14px;margin:18px 0 6px">Preparação</h3>
+        <div class="pre" id="bvPrep"></div>
+        <div class="nota" id="bvNotas" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div id="bForm" style="display:none">
+      <div class="card">
+        <div class="topo"><button id="bCancelar">‹ Cancelar</button><h2 style="margin:0" id="bfTitulo">Nova receita</h2></div>
+        <label class="l">Nome</label><input class="f" id="bfNome" placeholder="Sopa de legumes">
+        <label class="l">Tipo</label>
+        <div class="pills" id="bfTipo"></div>
+        <div class="row3">
+          <div><label class="l">Categoria</label><input class="f" id="bfCat" placeholder="Sopa" list="dlCat"></div>
+          <div><label class="l">Tempo</label><input class="f" id="bfTempo" placeholder="30 min"></div>
+          <div><label class="l">Porções</label><input class="f" id="bfPor" placeholder="4"></div>
+        </div>
+        <datalist id="dlCat"><option value="Sopa"><option value="Prato principal"><option value="Acompanhamento"><option value="Sobremesa"><option value="Pão e massa"><option value="Molho"><option value="Bebida"></datalist>
+        <label class="l">Ingredientes <span style="font-weight:400;text-transform:none;letter-spacing:0">(um por linha)</span></label>
+        <textarea class="f" id="bfIng" placeholder="500 g batata&#10;1 cebola&#10;1 l água"></textarea>
+        <label class="l">Preparação <span style="font-weight:400;text-transform:none;letter-spacing:0">(um passo por linha)</span></label>
+        <textarea class="f" id="bfPrep" placeholder="Bimby: Cebola e alho 5 seg / vel 5 · Refogar 3 min / 120 °C / vel 1&#10;Forno: 180 °C, 25 min…"></textarea>
+        <label class="l">Notas / fonte</label><input class="f" id="bfNotas" placeholder="Link da Cookidoo, truques…">
+        <button class="btn" id="bfGuardar">Guardar receita</button>
+        <button class="btn sec" id="bfApagar" style="display:none">Apagar receita</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIS -->
+  <section class="tab" id="t-mais">
+    <div class="mais">
+      <button data-go="t-gas"><span class="i">▲</span>Gás</button>
+      <button data-go="t-fecho"><span class="i">✓</span>Fecho do mês</button>
+      <button data-go="t-pou"><span class="i">%</span>Poupança</button>
+      <button data-go="t-hist"><span class="i">◷</span>Histórico</button>
+    </div>
+  </section>
   <!-- GÁS -->
   <section class="tab" id="t-gas">
     <div class="card">
@@ -354,10 +450,9 @@
   <button class="on" data-tab="t-desp"><span class="i">−</span>Despesa</button>
   <button data-tab="t-rec"><span class="i">+</span>Receita</button>
   <button data-tab="t-fun"><span class="i">◎</span>Fundos</button>
-  <button data-tab="t-gas"><span class="i">▲</span>Gás</button>
-  <button data-tab="t-fecho"><span class="i">✓</span>Fecho</button>
-  <button data-tab="t-pou"><span class="i">%</span>Poupança</button>
-  <button data-tab="t-hist"><span class="i">◷</span>Histórico</button>
+  <button data-tab="t-comp"><span class="i">☰</span>Compras</button>
+  <button data-tab="t-bim"><span class="i">♨</span>Receitas</button>
+  <button data-tab="t-mais"><span class="i">⋯</span>Mais</button>
 </div></nav>
 
 <div class="toast" id="toast"><span id="toastTxt"></span><button id="toastUndo">Anular</button></div>
@@ -652,15 +747,130 @@ $('pGuardar').onclick = () => {
   api('setPoupanca', o).then(d => { P = d; desenharPoupanca(); toast('Regras guardadas.'); }).catch(e => toast('Erro: ' + e, false, true)).finally(() => $('pGuardar').disabled = false);
 };
 
+/* ---------- lista de compras ---------- */
+let C = null;
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const TIPOS_REC = ['Bimby', 'Fogão', 'Forno', 'Airfryer', 'Sem cozinhar', 'Outro'];
+let bTipo = 'Todas', bfTipoSel = 'Bimby';
+const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const PARAR = new Set(['de','da','do','das','dos','e','ou','a','o','um','uma','com','sem','para','em','ao','q','qb','g','kg','ml','l','cl','dl','colher','colheres','sopa','cha','chá','pitada','dente','dentes','lata','latas','pacote','pacotes','copo','copos','unidade','unidades','fatia','fatias','ramo','ramos','folha','folhas','pedaco','pedacos','cubo','cubos','grande','grandes','pequeno','pequena','pequenos','pequenas','medio','media','picado','picada','picados','ralado','ralada','cortado','cortada','cozido','cozida','fresco','fresca','frescos','frescas','natural','gordo','magro','opcional','gosto']);
+const tokens = s => norm(s).replace(/[^a-z ]+/g,' ').split(/\s+/).filter(w => w.length > 2 && !PARAR.has(w)).map(w => w.replace(/(oes|aes|ais|eis|ois)$/, 'ao').replace(/s$/, ''));
+function temIngrediente(linha){
+  if (!C || !C.despensa) return null;
+  const t = tokens(linha); if (!t.length) return null;
+  if (t.every(w => w === 'agua')) return { item: 'água' };
+  return C.despensa.find(d => { const td = tokens(d.item); return td.length && td.every(w => t.includes(w)) || t.every(w => td.includes(w)); }) || null;
+}
+function carregarCompras(){ if (C) { desenharCompras(); return; } $('cLista').innerHTML = '<div class="vazio">A carregar…</div>'; api('getCompras').then(c => { C = c; desenharCompras(); }).catch(e => toast(String(e), false, true)); }
+function desenharCompras(){
+  $('cN').textContent = C.pendentes.length ? C.pendentes.length + ' a comprar' : '';
+  const item = (it, feito) => { const d = document.createElement('div'); d.className = 'chk' + (feito ? ' feito' : '');
+    d.innerHTML = `<div class="box">${feito ? '✓' : ''}</div><div class="q"><div class="t">${esc(it.item)}</div><small>${it.nota ? esc(it.nota) + ' · ' : ''}${it.quem || ''}${feito && it.compradoEm ? ' · comprado ' + fmtData(it.compradoEm) : ''}</small></div><button class="x" title="Apagar">×</button>`;
+    d.querySelector('.box').onclick = () => mudarCompra(it.row, feito ? 'A comprar' : 'Comprado');
+    d.querySelector('.q').onclick = () => { if (feito) mudarCompra(it.row, 'A comprar'); };
+    d.querySelector('.x').onclick = () => mudarCompra(it.row, 'apagar');
+    return d; };
+  const L = $('cLista'); L.innerHTML = ''; if (!C.pendentes.length) L.innerHTML = '<div class="vazio">Lista vazia — nada a comprar.</div>'; C.pendentes.forEach(it => L.appendChild(item(it, false)));
+  const F = $('cFeitos'); F.innerHTML = ''; if (!C.comprados.length) F.innerHTML = '<div class="vazio">Ainda nada.</div>'; C.comprados.forEach(it => F.appendChild(item(it, true)));
+  $('cSug').innerHTML = ''; C.sugestoes.slice(0, 14).forEach(sg => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = sg; b.onclick = () => adicionarCompra([sg]); $('cSug').appendChild(b); });
+  $('dlComp').innerHTML = C.sugestoes.map(sg => `<option value="${esc(sg)}">`).join('');
+  $('dN').textContent = C.despensa.length ? C.despensa.length + ' itens' : '';
+  const DL = $('dLista'); DL.innerHTML = ''; if (!C.despensa.length) DL.innerHTML = '<div class="vazio">Despensa vazia — escreve o que tens em casa.</div>';
+  C.despensa.forEach(d => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.innerHTML = esc(d.item) + '<span class="x">×</span>'; b.title = 'Acabou — tirar da despensa';
+    b.onclick = () => api('delDespensa', d.row).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true)); DL.appendChild(b); });
+  if (bAtual && $('bVer').style.display !== 'none') verReceita(bAtual);
+}
+$('dAdd').onclick = () => { const v = $('dItem').value; if (!v.trim()) return; api('addDespensa', { itens: v.split(/[,;\n]+/) }).then(r => { C = r.compras; desenharCompras(); toast('Despensa atualizada'); }).catch(e => toast(String(e), false, true)); $('dItem').value = ''; };
+$('dItem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('dAdd').click(); } });
+function mudarCompra(row, estado){ api('setCompra', row, estado).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true)); }
+function adicionarCompra(itens, nota){
+  const lista = itens.map(s => s.trim()).filter(Boolean); if (!lista.length) return;
+  $('cAdd').disabled = true;
+  api('addCompra', { itens: lista, nota: nota || '' }).then(r => { C = r.compras; desenharCompras(); toast(lista.length > 1 ? lista.length + ' itens adicionados à lista' : 'Adicionado à lista'); })
+    .catch(e => toast(String(e), false, true)).finally(() => $('cAdd').disabled = false);
+}
+$('cAdd').onclick = () => { const v = $('cItem').value; if (!v.trim()) return; adicionarCompra(v.split(/[;\n]+/)); $('cItem').value = ''; $('cItem').focus(); };
+$('cItem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('cAdd').click(); } });
+$('cLimpar').onclick = () => { if (!C || !C.comprados.length) return; api('limparComprados').then(r => { C = r.compras; desenharCompras(); toast('Comprados limpos'); }).catch(e => toast(String(e), false, true)); };
+
+/* ---------- receitas Bimby ---------- */
+let B = null, bAtual = null;
+function carregarReceitas(){
+  if (!C) api('getCompras').then(c => { C = c; if (bAtual && $('bVer').style.display !== 'none') verReceita(bAtual); }).catch(() => {});
+  if (B) { desenharReceitas(); return; }
+  $('bItems').innerHTML = '<div class="vazio">A carregar…</div>'; api('getReceitas').then(r => { B = r; desenharReceitas(); }).catch(e => toast(String(e), false, true));
+}
+function bMostrar(q){ ['bLista','bVer','bForm'].forEach(id => $(id).style.display = id === q ? '' : 'none'); window.scrollTo(0,0); }
+function desenharReceitas(){
+  const q = $('bBusca').value.trim().toLowerCase();
+  const tiposExist = ['Todas', ...TIPOS_REC.filter(t => B.some(r => r.tipo === t))];
+  $('bTipos').innerHTML = ''; if (tiposExist.length > 2) tiposExist.forEach(t => { const b = document.createElement('button'); b.className = 'chip' + (t === bTipo ? ' on' : ''); b.type = 'button'; b.textContent = t; b.onclick = () => { bTipo = t; desenharReceitas(); }; $('bTipos').appendChild(b); });
+  const lista = B.filter(r => (bTipo === 'Todas' || r.tipo === bTipo) && (!q || norm(r.nome).includes(norm(q)) || norm(r.ingredientes).includes(norm(q)) || norm(r.cat).includes(norm(q))));
+  $('bN').textContent = B.length ? B.length + (B.length === 1 ? ' receita' : ' receitas') : '';
+  const el = $('bItems'); el.innerHTML = '';
+  if (!B.length) { el.innerHTML = '<div class="vazio">Ainda sem receitas. Toca em "+ Nova".</div>'; return; }
+  if (!lista.length) { el.innerHTML = '<div class="vazio">Nada encontrado.</div>'; return; }
+  lista.forEach(r => { const d = document.createElement('div'); d.className = 'rec';
+    d.innerHTML = `<div class="q"><div>${esc(r.nome)}</div><small>${[r.tipo, r.cat, r.tempo, r.porcoes ? r.porcoes + ' porções' : ''].filter(Boolean).join(' · ')}</small></div>${r.fav ? '<span class="fav">★</span>' : ''}<span style="color:var(--muted)">›</span>`;
+    d.onclick = () => verReceita(r); el.appendChild(d); });
+}
+function verReceita(r){
+  bAtual = r;
+  $('bvNome').textContent = r.nome;
+  $('bvMeta').textContent = [r.tipo, r.cat, r.tempo, r.porcoes ? r.porcoes + ' porções' : '', r.quem ? 'por ' + r.quem : ''].filter(Boolean).join(' · ');
+  const ing = r.ingredientes.split('\n').map(s => s.trim()).filter(Boolean);
+  const temDesp = !!(C && C.despensa && C.despensa.length);
+  const estado = ing.map(s => temDesp ? (temIngrediente(s) ? 'tem' : 'falta') : '');
+  $('bvIng').innerHTML = ing.map((s, i) => `<li class="${estado[i]}"><span class="m">${estado[i] === 'tem' ? '✓' : estado[i] === 'falta' ? '✗' : '•'}</span>${esc(s)}</li>`).join('') || '<li class="vazio">—</li>';
+  const faltam = ing.filter((s, i) => estado[i] !== 'tem');
+  $('bvFalta').textContent = !ing.length ? '' : !temDesp ? 'Preenche a despensa (em Compras) para a app dizer o que já tens.' : faltam.length ? `Faltam ${faltam.length} de ${ing.length} ingredientes.` : 'Tens tudo em casa ✓';
+  $('bvCompras').style.display = faltam.length ? '' : 'none';
+  $('bvCompras').textContent = temDesp ? 'Mandar o que falta para a lista de compras' : 'Mandar ingredientes para a lista de compras';
+  const passos = r.preparacao.split('\n').map(s => s.trim()).filter(Boolean);
+  $('bvPrep').innerHTML = passos.length ? '<ol>' + passos.map(s => `<li>${esc(s.replace(/^\d+[.)]\s*/, ''))}</li>`).join('') + '</ol>' : '<span class="vazio">—</span>';
+  $('bvNotas').innerHTML = r.notas ? esc(r.notas).replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>') : '';
+  $('bFav').textContent = r.fav ? '★' : '☆';
+  bMostrar('bVer');
+}
+$('bVoltar').onclick = () => bMostrar('bLista');
+$('bBusca').addEventListener('input', desenharReceitas);
+$('bvCompras').onclick = () => { const ing = bAtual.ingredientes.split('\n').map(s => s.trim()).filter(Boolean).filter(s => !(C && C.despensa && C.despensa.length && temIngrediente(s))); if (!ing.length) return; adicionarCompra(ing, bAtual.nome); };
+$('bFav').onclick = () => { const o = Object.assign({}, bAtual, { fav: !bAtual.fav }); api('saveReceita', o).then(r => { B = r.receitas; bAtual = B.find(x => x.row === bAtual.row); $('bFav').textContent = bAtual.fav ? '★' : '☆'; }).catch(e => toast(String(e), false, true)); };
+function formReceita(r){
+  $('bfTitulo').textContent = r ? 'Editar receita' : 'Nova receita';
+  $('bfNome').value = r ? r.nome : ''; $('bfCat').value = r ? r.cat : ''; $('bfTempo').value = r ? r.tempo : ''; $('bfPor').value = r ? r.porcoes : '';
+  $('bfIng').value = r ? r.ingredientes : ''; $('bfPrep').value = r ? r.preparacao : ''; $('bfNotas').value = r ? r.notas : '';
+  bfTipoSel = r && r.tipo ? r.tipo : 'Bimby';
+  $('bfTipo').innerHTML = ''; TIPOS_REC.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bfTipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bfTipoSel = t; [...$('bfTipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bfTipo').appendChild(b); });
+  $('bfApagar').style.display = r ? '' : 'none'; bMostrar('bForm'); if (!r) $('bfNome').focus();
+}
+$('bNova').onclick = () => { bAtual = null; formReceita(null); };
+$('bEditar').onclick = () => formReceita(bAtual);
+$('bCancelar').onclick = () => bMostrar(bAtual ? 'bVer' : 'bLista');
+$('bfGuardar').onclick = () => {
+  const o = { row: bAtual ? bAtual.row : null, nome: $('bfNome').value, tipo: bfTipoSel, cat: $('bfCat').value, tempo: $('bfTempo').value, porcoes: $('bfPor').value, ingredientes: $('bfIng').value, preparacao: $('bfPrep').value, notas: $('bfNotas').value, fav: bAtual ? bAtual.fav : false };
+  if (!o.nome.trim()) return toast('Falta o nome', false, true);
+  $('bfGuardar').disabled = true;
+  api('saveReceita', o).then(r => { B = r.receitas; desenharReceitas(); const nova = B.find(x => x.row === r.row); toast('Receita guardada'); if (nova) verReceita(nova); else bMostrar('bLista'); })
+    .catch(e => toast(String(e), false, true)).finally(() => $('bfGuardar').disabled = false);
+};
+$('bfApagar').onclick = () => { if (!bAtual) return; const b = $('bfApagar'); if (b.dataset.conf !== '1') { b.dataset.conf = '1'; b.textContent = 'Tens a certeza? Toca outra vez para apagar'; setTimeout(() => { b.dataset.conf = ''; b.textContent = 'Apagar receita'; }, 4000); return; }
+  api('delReceita', bAtual.row).then(r => { B = r.receitas; bAtual = null; desenharReceitas(); bMostrar('bLista'); toast('Apagada'); }).catch(e => toast(String(e), false, true)); };
+
 /* ---------- navegação ---------- */
-document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x===b));
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab));
-  if (b.dataset.tab === 't-fecho') carregarFecho();
-  if (b.dataset.tab === 't-hist') carregarHistorico();
-  if (b.dataset.tab === 't-pou') carregarPoupanca();
+function irPara(id){
+  const navId = ['t-gas','t-fecho','t-pou','t-hist'].includes(id) ? 't-mais' : id;
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x.dataset.tab === navId));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === id));
+  if (id === 't-fecho') carregarFecho();
+  if (id === 't-hist') carregarHistorico();
+  if (id === 't-pou') carregarPoupanca();
+  if (id === 't-comp') carregarCompras();
+  if (id === 't-bim') carregarReceitas();
   window.scrollTo(0, 0);
-});
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => irPara(b.dataset.tab));
+document.querySelectorAll('.mais button').forEach(b => b.onclick = () => irPara(b.dataset.go));
 document.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => $(b.dataset.alvo).value = hoje(Number(b.dataset.dia)));
 $('stMain').onclick = () => $('detalhe').classList.toggle('on');
 $('dMaisBtn').onclick = () => { const m = $('dMais'); const on = m.style.display === 'none'; m.style.display = on ? '' : 'none'; $('dMaisBtn').textContent = on ? '− Notas' : '+ Notas'; };
