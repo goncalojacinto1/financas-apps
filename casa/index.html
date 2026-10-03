@@ -318,6 +318,8 @@
         <div class="pills" id="bIAtipo" style="margin-top:10px"></div>
         <p class="nota">A app pede uma receita à IA (Gemini). Com "Qualquer" é ela que escolhe a forma mais prática; com Bimby vem com tempo / temperatura / velocidade. Tem em conta o que há na despensa. Depois revês e guardas.</p>
         <div class="vazio" id="bIAestado" style="display:none"></div>
+        <div id="bIAres"></div>
+        <button class="btn sec" id="bIAmais" style="display:none">Mostrar mais opções</button>
       </div>
     </div>
     <div id="bVer" style="display:none">
@@ -855,14 +857,24 @@ function formReceita(r){
 $('bNova').onclick = () => { bAtual = null; formReceita(null); };
 let bIAtipoSel = 'Qualquer';
 ['Qualquer', ...TIPOS_REC].forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bIAtipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bIAtipoSel = t; [...$('bIAtipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bIAtipo').appendChild(b); });
-$('bIAbtn').onclick = () => {
+let bIAlista = [];
+function pesquisarIA(mais){
   const pedido = $('bIA').value.trim(); if (!pedido) return toast('Escreve o que queres cozinhar', false, true);
-  $('bIAbtn').disabled = true; const st = $('bIAestado'); st.style.display = ''; st.textContent = 'A procurar "' + pedido + '"… (10–20 s)';
-  api('procurarReceita', { pedido, tipo: bIAtipoSel, despensa: C && C.despensa ? C.despensa.map(d => d.item) : [] })
-    .then(r => { st.style.display = 'none'; bAtual = null; formReceita(Object.assign({ row: null, fav: false, quem: '' }, r)); $('bfTitulo').textContent = 'Rever e guardar'; toast('Receita encontrada — revê e guarda'); })
+  if (!mais) { bIAlista = []; $('bIAres').innerHTML = ''; $('bIAmais').style.display = 'none'; }
+  $('bIAbtn').disabled = true; $('bIAmais').disabled = true; const st = $('bIAestado'); st.style.display = ''; st.textContent = (mais ? 'A procurar mais opções' : 'A procurar "' + pedido + '"') + '… (10–30 s)';
+  api('procurarReceita', { pedido, tipo: bIAtipoSel, n: 3, despensa: C && C.despensa ? C.despensa.map(d => d.item) : [], excluir: bIAlista.map(r => r.nome) })
+    .then(lista => {
+      st.style.display = 'none'; bIAlista = bIAlista.concat(lista);
+      $('bIAres').innerHTML = bIAlista.map((r, i) => `<div class="rec" data-i="${i}"><div class="q"><div>${esc(r.nome)}</div><small>${[r.tipo, r.cat, r.tempo, r.porcoes ? r.porcoes + ' porções' : ''].filter(Boolean).join(' · ')}${r.resumo ? '<br>' + esc(r.resumo) : ''}</small></div><span style="color:var(--muted)">›</span></div>`).join('');
+      $('bIAres').querySelectorAll('.rec').forEach(d => d.onclick = () => { const r = bIAlista[Number(d.dataset.i)]; bAtual = null; formReceita(Object.assign({ row: null, fav: false, quem: '' }, r)); $('bfTitulo').textContent = 'Rever e guardar'; });
+      $('bIAmais').style.display = bIAlista.length ? '' : 'none';
+      toast(lista.length + (lista.length === 1 ? ' opção' : ' opções') + ' — escolhe uma para rever');
+    })
     .catch(e => { st.textContent = String(e); })
-    .finally(() => $('bIAbtn').disabled = false);
-};
+    .finally(() => { $('bIAbtn').disabled = false; $('bIAmais').disabled = false; });
+}
+$('bIAbtn').onclick = () => pesquisarIA(false);
+$('bIAmais').onclick = () => pesquisarIA(true);
 $('bIA').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('bIAbtn').click(); } });
 
 $('bEditar').onclick = () => formReceita(bAtual);
