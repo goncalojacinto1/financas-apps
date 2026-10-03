@@ -324,7 +324,7 @@
     </div>
     <div id="bVer" style="display:none">
       <div class="card">
-        <div class="topo"><button id="bVoltar">‹ Receitas</button><div><button id="bEditar">Editar</button> <button id="bFav">☆</button></div></div>
+        <div class="topo"><button id="bVoltar">‹ Receitas</button><div id="bvAcoes"><button id="bEditar">Editar</button> <button id="bFav">☆</button></div></div>
         <h2 id="bvNome" style="font-size:20px"></h2>
         <div class="nota" id="bvMeta" style="margin-top:-6px"></div>
         <h3 style="font-size:14px;margin:14px 0 6px">Ingredientes</h3>
@@ -334,6 +334,8 @@
         <h3 style="font-size:14px;margin:18px 0 6px">Preparação</h3>
         <div class="pre" id="bvPrep"></div>
         <div class="nota" id="bvNotas" style="margin-top:12px"></div>
+        <button class="btn" id="bvGuardar" style="display:none">Guardar no livro de receitas</button>
+        <button class="btn sec" id="bvOutra" style="display:none">‹ Ver outra opção</button>
       </div>
     </div>
     <div id="bForm" style="display:none">
@@ -804,13 +806,13 @@ $('cItem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.prevent
 $('cLimpar').onclick = () => { if (!C || !C.comprados.length) return; api('limparComprados').then(r => { C = r.compras; desenharCompras(); toast('Comprados limpos'); }).catch(e => toast(String(e), false, true)); };
 
 /* ---------- receitas Bimby ---------- */
-let B = null, bAtual = null;
+let B = null, bAtual = null, bIAlista = [];
 function carregarReceitas(){
   if (!C) api('getCompras').then(c => { C = c; if (bAtual && $('bVer').style.display !== 'none') verReceita(bAtual); }).catch(() => {});
   if (B) { desenharReceitas(); return; }
   $('bItems').innerHTML = '<div class="vazio">A carregar…</div>'; api('getReceitas').then(r => { B = r; desenharReceitas(); }).catch(e => toast(String(e), false, true));
 }
-function bMostrar(q){ ['bLista','bVer','bForm'].forEach(id => $(id).style.display = id === q ? '' : 'none'); window.scrollTo(0,0); }
+function bMostrar(q){ ['bLista','bVer','bForm'].forEach(id => $(id).style.display = id === q ? '' : 'none'); if (q === 'bLista' && bIAlista.length) $('bIAres').scrollIntoView({ block: 'start' }); else window.scrollTo(0,0); }
 function desenharReceitas(){
   const q = $('bBusca').value.trim().toLowerCase();
   const tiposExist = ['Todas', ...TIPOS_REC.filter(t => B.some(r => r.tipo === t))];
@@ -840,9 +842,20 @@ function verReceita(r){
   $('bvPrep').innerHTML = passos.length ? '<ol>' + passos.map(s => `<li>${esc(s.replace(/^\d+[.)]\s*/, ''))}</li>`).join('') + '</ol>' : '<span class="vazio">—</span>';
   $('bvNotas').innerHTML = r.notas ? esc(r.notas).replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>') : '';
   $('bFav').textContent = r.fav ? '★' : '☆';
+  const preview = !r.row;
+  $('bvAcoes').style.display = preview ? 'none' : '';
+  $('bvGuardar').style.display = preview ? '' : 'none'; $('bvOutra').style.display = preview ? '' : 'none';
+  $('bVoltar').textContent = preview ? '‹ Opções' : '‹ Receitas';
   bMostrar('bVer');
 }
-$('bVoltar').onclick = () => bMostrar('bLista');
+$('bvGuardar').onclick = () => {
+  const o = Object.assign({}, bAtual, { row: null, fav: false }); delete o.resumo;
+  $('bvGuardar').disabled = true;
+  api('saveReceita', o).then(r => { B = r.receitas; desenharReceitas(); const nova = B.find(x => x.row === r.row); toast('Guardada no livro'); if (nova) verReceita(nova); else bMostrar('bLista'); })
+    .catch(e => toast(String(e), false, true)).finally(() => $('bvGuardar').disabled = false);
+};
+$('bvOutra').onclick = () => { bAtual = null; bMostrar('bLista'); };
+$('bVoltar').onclick = () => { if (bAtual && !bAtual.row) bAtual = null; bMostrar('bLista'); };
 $('bBusca').addEventListener('input', desenharReceitas);
 $('bvCompras').onclick = () => { const ing = bAtual.ingredientes.split('\n').map(s => s.trim()).filter(Boolean).filter(s => !(C && C.despensa && C.despensa.length && temIngrediente(s))); if (!ing.length) return; adicionarCompra(ing, bAtual.nome); };
 $('bFav').onclick = () => { const o = Object.assign({}, bAtual, { fav: !bAtual.fav }); api('saveReceita', o).then(r => { B = r.receitas; bAtual = B.find(x => x.row === bAtual.row); $('bFav').textContent = bAtual.fav ? '★' : '☆'; }).catch(e => toast(String(e), false, true)); };
@@ -857,7 +870,6 @@ function formReceita(r){
 $('bNova').onclick = () => { bAtual = null; formReceita(null); };
 let bIAtipoSel = 'Qualquer';
 ['Qualquer', ...TIPOS_REC].forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bIAtipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bIAtipoSel = t; [...$('bIAtipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bIAtipo').appendChild(b); });
-let bIAlista = [];
 function pesquisarIA(mais){
   const pedido = $('bIA').value.trim(); if (!pedido) return toast('Escreve o que queres cozinhar', false, true);
   if (!mais) { bIAlista = []; $('bIAres').innerHTML = ''; $('bIAmais').style.display = 'none'; }
@@ -866,7 +878,7 @@ function pesquisarIA(mais){
     .then(lista => {
       st.style.display = 'none'; bIAlista = bIAlista.concat(lista);
       $('bIAres').innerHTML = bIAlista.map((r, i) => `<div class="rec" data-i="${i}"><div class="q"><div>${esc(r.nome)}</div><small>${[r.tipo, r.cat, r.tempo, r.porcoes ? r.porcoes + ' porções' : ''].filter(Boolean).join(' · ')}${r.resumo ? '<br>' + esc(r.resumo) : ''}</small></div><span style="color:var(--muted)">›</span></div>`).join('');
-      $('bIAres').querySelectorAll('.rec').forEach(d => d.onclick = () => { const r = bIAlista[Number(d.dataset.i)]; bAtual = null; formReceita(Object.assign({ row: null, fav: false, quem: '' }, r)); $('bfTitulo').textContent = 'Rever e guardar'; });
+      $('bIAres').querySelectorAll('.rec').forEach(d => d.onclick = () => { const r = bIAlista[Number(d.dataset.i)]; verReceita(Object.assign({ row: null, fav: false, quem: 'IA' }, r)); });
       $('bIAmais').style.display = bIAlista.length ? '' : 'none';
       toast(lista.length + (lista.length === 1 ? ' opção' : ' opções') + ' — escolhe uma para rever');
     })
