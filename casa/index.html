@@ -48,6 +48,7 @@
   .kv .falta{color:var(--bad);font-weight:700} .kv .ok{color:var(--good);font-weight:700}
   table.pou{width:100%;border-collapse:collapse;font-size:12px} table.pou th{text-align:right;font-weight:600;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)} table.pou th:first-child,table.pou td:first-child{text-align:left}
   table.pou td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+  body.semfin .stats,body.semfin .stats3{display:none} body.semfin header{padding-bottom:18px} body.semfin .wrap{padding-top:14px}
   .stats3{max-width:560px;margin:0 auto 14px;padding:0 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .stats3 .stat{padding:10px 12px} .stats3 .stat b{font-size:15px}
   .stats3 .stat.aviso{grid-column:1/-1;background:#FFF6E5;font-size:12px;color:#7A4B00}
@@ -307,9 +308,16 @@
     <div id="bLista">
       <div class="card">
         <div class="topo"><h2 style="margin:0">Receitas <small id="bN"></small></h2><button id="bNova">+ Nova</button></div>
-        <input class="f" id="bBusca" placeholder="Procurar por nome ou ingrediente…" autocomplete="off">
+        <input class="f" id="bBusca" placeholder="Procurar nas nossas receitas…" autocomplete="off">
         <div class="chips" id="bTipos" style="margin-top:8px"></div>
         <div id="bItems" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <h2>Procurar receita nova <small>com IA</small></h2>
+        <div class="addrow"><input class="f" id="bIA" placeholder="Ex.: frango no forno, sopa de abóbora…" autocomplete="off"><button id="bIAbtn" title="Procurar">🔍</button></div>
+        <div class="pills" id="bIAtipo" style="margin-top:10px"></div>
+        <p class="nota">A app pede uma receita à IA (Gemini) para o tipo escolhido — na Bimby vem com tempo / temperatura / velocidade — e tem em conta o que há na despensa. Depois revês e guardas.</p>
+        <div class="vazio" id="bIAestado" style="display:none"></div>
       </div>
     </div>
     <div id="bVer" style="display:none">
@@ -837,14 +845,26 @@ $('bBusca').addEventListener('input', desenharReceitas);
 $('bvCompras').onclick = () => { const ing = bAtual.ingredientes.split('\n').map(s => s.trim()).filter(Boolean).filter(s => !(C && C.despensa && C.despensa.length && temIngrediente(s))); if (!ing.length) return; adicionarCompra(ing, bAtual.nome); };
 $('bFav').onclick = () => { const o = Object.assign({}, bAtual, { fav: !bAtual.fav }); api('saveReceita', o).then(r => { B = r.receitas; bAtual = B.find(x => x.row === bAtual.row); $('bFav').textContent = bAtual.fav ? '★' : '☆'; }).catch(e => toast(String(e), false, true)); };
 function formReceita(r){
-  $('bfTitulo').textContent = r ? 'Editar receita' : 'Nova receita';
+  $('bfTitulo').textContent = r && r.row ? 'Editar receita' : 'Nova receita';
   $('bfNome').value = r ? r.nome : ''; $('bfCat').value = r ? r.cat : ''; $('bfTempo').value = r ? r.tempo : ''; $('bfPor').value = r ? r.porcoes : '';
   $('bfIng').value = r ? r.ingredientes : ''; $('bfPrep').value = r ? r.preparacao : ''; $('bfNotas').value = r ? r.notas : '';
   bfTipoSel = r && r.tipo ? r.tipo : 'Bimby';
   $('bfTipo').innerHTML = ''; TIPOS_REC.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bfTipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bfTipoSel = t; [...$('bfTipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bfTipo').appendChild(b); });
-  $('bfApagar').style.display = r ? '' : 'none'; bMostrar('bForm'); if (!r) $('bfNome').focus();
+  $('bfApagar').style.display = r && r.row ? '' : 'none'; bMostrar('bForm'); if (!r) $('bfNome').focus();
 }
 $('bNova').onclick = () => { bAtual = null; formReceita(null); };
+let bIAtipoSel = 'Bimby';
+TIPOS_REC.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bIAtipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bIAtipoSel = t; [...$('bIAtipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bIAtipo').appendChild(b); });
+$('bIAbtn').onclick = () => {
+  const pedido = $('bIA').value.trim(); if (!pedido) return toast('Escreve o que queres cozinhar', false, true);
+  $('bIAbtn').disabled = true; const st = $('bIAestado'); st.style.display = ''; st.textContent = 'A procurar "' + pedido + '"… (10–20 s)';
+  api('procurarReceita', { pedido, tipo: bIAtipoSel, despensa: C && C.despensa ? C.despensa.map(d => d.item) : [] })
+    .then(r => { st.style.display = 'none'; bAtual = null; formReceita(Object.assign({ row: null, fav: false, quem: '' }, r)); $('bfTitulo').textContent = 'Rever e guardar'; toast('Receita encontrada — revê e guarda'); })
+    .catch(e => { st.textContent = String(e); })
+    .finally(() => $('bIAbtn').disabled = false);
+};
+$('bIA').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('bIAbtn').click(); } });
+
 $('bEditar').onclick = () => formReceita(bAtual);
 $('bCancelar').onclick = () => bMostrar(bAtual ? 'bVer' : 'bLista');
 $('bfGuardar').onclick = () => {
@@ -862,6 +882,7 @@ function irPara(id){
   const navId = ['t-gas','t-fecho','t-pou','t-hist'].includes(id) ? 't-mais' : id;
   document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x.dataset.tab === navId));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === id));
+  document.body.classList.toggle('semfin', ['t-comp','t-bim','t-mais'].includes(id));
   if (id === 't-fecho') carregarFecho();
   if (id === 't-hist') carregarHistorico();
   if (id === 't-pou') carregarPoupanca();
