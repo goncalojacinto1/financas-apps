@@ -291,7 +291,7 @@
       <div class="valor"><input id="pObj" inputmode="decimal" placeholder="0,00"><span>€</span></div>
       <div class="nota" id="pSug"></div>
       <button class="btn" id="pGuardar">Guardar regras</button>
-      <p class="nota">As percentagens aplicam-se à receita total de cada mês. Enquanto o fundo de emergência não chegar ao objetivo, a ideia é 20% / 0%; depois passa a 10% / 10%. Ficam guardadas na aba Config da folha.</p>
+      <p class="nota">As percentagens aplicam-se ao que o Gonçalo e a Alice põem na conta em cada mês (sem cashback nem outras entradas). Enquanto o fundo de emergência não chegar ao objetivo, a ideia é 20% / 0%; depois passa a 10% / 10%. Ficam guardadas na aba Config da folha.</p>
     </div>
     <div class="card">
       <h2>Mês a mês</h2>
@@ -567,11 +567,11 @@ function desenharPoupanca(){
   } else { $('pProg').style.width = '0'; $('pObjTxt').textContent = eur(saldo); $('pObjNota').textContent = 'Define o objetivo nas regras abaixo.'; }
   // este mês
   if (m && r.definidas){
-    const pe = m.receita*r.pEmerg, pf = m.receita*r.pFerias, fe = pe - m.depEmerg, ff = pf - m.depFerias;
+    const pe = m.casal*r.pEmerg, pf = m.casal*r.pFerias, fe = pe - m.depEmerg, ff = pf - m.depFerias;
     $('pMesLabel').textContent = m.label;
     const linha = (t, v, cls) => `<div class="kv"><span>${t}</span><b class="${cls||''}">${v}</b></div>`;
     $('pMes').innerHTML =
-      linha('Receita do mês', eur(m.receita)) +
+      linha('Entradas Gonçalo + Alice', eur(m.casal)) +
       linha(`Previsto p/ Emergência (${pct1(r.pEmerg)})`, eur(pe)) +
       linha('Já depositado', eur(m.depEmerg)) +
       linha('Em falta', fe > 0.005 ? eur(fe) : '✓ feito', fe > 0.005 ? 'falta' : 'ok') +
@@ -587,9 +587,9 @@ function desenharPoupanca(){
   } else { $('pMesLabel').textContent = ''; $('pMes').innerHTML = '<div class="nota">Define as regras abaixo e guarda.</div>'; $('pDepositar').style.display = 'none'; }
   // tabela
   const temF = r.pFerias > 0;
-  $('pTabela').innerHTML = `<tr><th>Mês</th><th>Receita</th><th>Emerg. prev.</th><th>Dep.</th><th>Falta</th>${temF ? '<th>Fér. prev.</th><th>Dep.</th>' : ''}<th>Saldo emerg.</th></tr>` +
-    meses.slice().reverse().map(x => { const pe = x.receita*r.pEmerg, fe = pe - x.depEmerg;
-      return `<tr><td>${x.label}</td><td>${eur(x.receita)}</td><td>${eur(pe)}</td><td>${eur(x.depEmerg)}</td><td class="${fe > 0.005 ? 'neg' : ''}">${fe > 0.005 ? eur(fe) : '✓'}</td>${temF ? `<td>${eur(x.receita*r.pFerias)}</td><td>${eur(x.depFerias)}</td>` : ''}<td>${eur(x.saldoEmerg)}</td></tr>`; }).join('');
+  $('pTabela').innerHTML = `<tr><th>Mês</th><th>G + A</th><th>Emerg. prev.</th><th>Dep.</th><th>Falta</th>${temF ? '<th>Fér. prev.</th><th>Dep.</th>' : ''}<th>Saldo emerg.</th></tr>` +
+    meses.slice().reverse().map(x => { const pe = x.casal*r.pEmerg, fe = pe - x.depEmerg;
+      return `<tr><td>${x.label}</td><td>${eur(x.casal)}</td><td>${eur(pe)}</td><td>${eur(x.depEmerg)}</td><td class="${fe > 0.005 ? 'neg' : ''}">${fe > 0.005 ? eur(fe) : '✓'}</td>${temF ? `<td>${eur(x.casal*r.pFerias)}</td><td>${eur(x.depFerias)}</td>` : ''}<td>${eur(x.saldoEmerg)}</td></tr>`; }).join('');
 }
 $('pGuardar').onclick = () => {
   const n = s => Number(String(s).replace(/\s/g,'').replace(',', '.')) || 0;
