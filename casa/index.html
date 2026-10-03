@@ -48,6 +48,9 @@
   .kv .falta{color:var(--bad);font-weight:700} .kv .ok{color:var(--good);font-weight:700}
   table.pou{width:100%;border-collapse:collapse;font-size:12px} table.pou th{text-align:right;font-weight:600;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)} table.pou th:first-child,table.pou td:first-child{text-align:left}
   table.pou td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .stats3{max-width:560px;margin:0 auto 14px;padding:0 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .stats3 .stat{padding:10px 12px} .stats3 .stat b{font-size:15px}
+  .stats3 .stat.aviso{grid-column:1/-1;background:#FFF6E5;font-size:12px;color:#7A4B00}
   .linha{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--muted)}
   .linha b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -158,6 +161,7 @@
   <div class="stat"><small>Despesas do mês</small><b id="sDesp">–</b></div>
   <div class="stat"><small>Receitas do mês</small><b id="sRec">–</b></div>
 </div>
+<div class="stats3" id="stContas"></div>
 
 <div class="wrap">
   <div class="detalhe" id="detalhe"></div>
@@ -234,6 +238,28 @@
       <p class="nota">Os dois fundos estão no mesmo Revolut, separados aqui como envelopes. Gastos pagos com dinheiro de um fundo (lenha, férias…) lançam-se em <b>Despesa</b>, com "Sai de" = o fundo. Aqui ficam só depósitos e ajustes. Num ajuste, usa valor negativo para tirar dinheiro.</p>
     </div>
     <div class="card"><h2>Últimos movimentos</h2><ul class="lista" id="lFun"></ul></div>
+    <div class="card">
+      <h2>Transferência entre contas <small>Moey · Bybit · Dinheiro</small></h2>
+      <label class="l">De</label>
+      <div class="pills" id="tDe"></div>
+      <label class="l">Para</label>
+      <div class="pills" id="tPara"></div>
+      <label class="l">Valor</label>
+      <div class="valor"><input id="tValor" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>€</span></div>
+      <div class="row2">
+        <div><label class="l">Descrição</label><input class="f" id="tDesc" placeholder="Carregar Bybit"></div>
+        <div><label class="l">Data</label><input class="f" type="date" id="tData"></div>
+      </div>
+      <button class="btn" id="tGuardar">Guardar transferência</button>
+      <p class="nota">Não muda o saldo da casa — só o de cada conta. Serve para a app saber quanto está em cada uma.</p>
+    </div>
+    <div class="card">
+      <h2>Acertar saldos das contas</h2>
+      <p class="nota" style="margin-top:0">Escreve o saldo real de cada conta (o que a app do banco mostra hoje). A partir daí a app vai somando e descontando os movimentos.</p>
+      <div id="aContas"></div>
+      <button class="btn sec" id="aGuardar">Guardar saldos</button>
+    </div>
+    <div class="card"><h2>Últimas transferências</h2><ul class="lista" id="lTrf"></ul></div>
   </section>
 
   <!-- GÁS -->
@@ -341,7 +367,7 @@ const $ = id => document.getElementById(id);
 const eur = v => (typeof v === 'number' ? v : 0).toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
 const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 let D = null;              // dados vindos da folha
-const st = { dCat:'', dPago:'Bybit', rOrig:'', rConta:'Moey', fFundo:'', fMov:'Depósito', fSai:'Moey' };
+const st = { dCat:'', dPago:'Bybit', rOrig:'', rConta:'Moey', fFundo:'', fMov:'Depósito', fSai:'Moey', tDe:'Moey', tPara:'Bybit' };
 let ultimo = null;         // último lançamento (para anular)
 
 /* ---------- ligação à folha ---------- */
@@ -388,6 +414,16 @@ function render(){
   }
   $('fEmerg').textContent = eur(D.fundos.emerg);
   $('fFerias').textContent = eur(D.fundos.ferias);
+  // saldos por conta
+  const CS = D.contasSaldo;
+  if (CS){
+    $('stContas').innerHTML = CS.contas.map(c => `<div class="stat"><small>${c.nome}</small><b class="${c.saldo < 0 ? 'neg' : ''}">${eur(c.saldo)}</b></div>`).join('') +
+      (!CS.definidos ? `<div class="stat aviso">Saldos por conta ainda não acertados — vai a Fundos → "Acertar saldos das contas".</div>` :
+       Math.abs(CS.semConta) > 0.005 ? `<div class="stat aviso">${eur(CS.semConta)} em lançamentos sem conta indicada (não entram em nenhuma das três).</div>` : '');
+    $('aContas').innerHTML = CS.contas.map(c => `<label class="l">${c.nome} <span style="font-weight:400;text-transform:none;letter-spacing:0">(calculado: ${eur(c.saldo)})</span></label><div class="valor"><input data-conta="${c.nome}" inputmode="decimal" placeholder="${c.saldo.toFixed(2).replace('.', ',')}" autocomplete="off"><span>€</span></div>`).join('');
+    pills($('tDe'), D.listas.contas, 'tDe'); pills($('tPara'), D.listas.contas, 'tPara');
+    if (!$('tData').value) $('tData').value = hoje();
+  }
 
   // despesa
   pills($('dCat'), D.listas.cats, 'dCat');
@@ -460,6 +496,7 @@ function renderListas(){
   fill($('lDesp'), R.Despesas, r => item('Despesas', r, r.b, `${fmtData(r.data)} · ${r.a}${r.c ? ` <span class="tag">${r.c}</span>` : ''}`, eur(r.valor)));
   fill($('lRec'),  R.Receitas, r => item('Receitas', r, r.a + (r.b ? ' — ' + r.b : ''), `${fmtData(r.data)} · ${r.c||''}`, eur(r.valor)));
   fill($('lFun'),  R.Fundos,   r => item('Fundos', r, r.a, `${fmtData(r.data)} · ${r.b}${r.c ? ' · ' + r.c : ''}`, eur(r.valor)));
+  fill($('lTrf'),  R['Transferências'] || [], r => item('Transferências', r, `${r.a} → ${r.b}`, `${fmtData(r.data)}${r.c ? ' · ' + r.c : ''}`, eur(r.valor)));
   fill($('lGas'),  R['Gás'],   r => item('Gás', r, `Botija ${r.n} — ${r.b||''}`, `${fmtData(r.data)} → ${r.fim ? fmtData(r.fim) + ' · ' + r.dias + ' dias' : 'em uso'}`, eur(r.valor)));
 }
 
@@ -502,6 +539,22 @@ $('fGuardar').onclick = () => {
     { data:$('fData').value, fundo:st.fFundo, movimento:st.fMov, valor:$('fValor').value, descricao:$('fDesc').value || $('fDesc').placeholder, saiDe:st.fSai },
     () => { $('fValor').value=''; $('fDesc').value=''; st.fFundo=''; st.fMov='Depósito'; P = null; },
     'Movimento guardado');
+};
+
+$('tGuardar').onclick = () => {
+  if (!num($('tValor').value)) return toast('Falta o valor', false, true);
+  if (st.tDe === st.tPara) return toast('As contas têm de ser diferentes', false, true);
+  guardar($('tGuardar'), 'addTransferencia',
+    { data:$('tData').value, de:st.tDe, para:st.tPara, valor:$('tValor').value, descricao:$('tDesc').value },
+    () => { $('tValor').value=''; $('tDesc').value=''; },
+    'Transferência guardada');
+};
+$('aGuardar').onclick = () => {
+  const saldos = {}; let algum = false;
+  $('aContas').querySelectorAll('input[data-conta]').forEach(i => { if (i.value.trim()) { saldos[i.dataset.conta] = i.value; algum = true; } });
+  if (!algum) return toast('Escreve pelo menos um saldo', false, true);
+  $('aGuardar').disabled = true;
+  api('setSaldosContas', { saldos }).then(res => { D = res.dados; render(); toast('Saldos acertados.'); }).catch(e => toast(String(e), false, true)).finally(() => $('aGuardar').disabled = false);
 };
 $('gGuardar').onclick = () => {
   if (!num($('gPreco').value)) return toast('Falta o preço', false, true);
