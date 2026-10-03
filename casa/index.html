@@ -40,6 +40,14 @@
   .bar .t{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
   .bar .t i{display:block;height:100%;background:var(--accent-2);border-radius:4px}
   .bar span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .prog{height:12px;background:var(--soft);border-radius:6px;overflow:hidden;margin:8px 0 4px}
+  .prog i{display:block;height:100%;background:var(--accent-2);border-radius:6px;transition:width .4s}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+  .kv:first-child{border-top:0}
+  .kv b{font-variant-numeric:tabular-nums}
+  .kv .falta{color:var(--bad);font-weight:700} .kv .ok{color:var(--good);font-weight:700}
+  table.pou{width:100%;border-collapse:collapse;font-size:12px} table.pou th{text-align:right;font-weight:600;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)} table.pou th:first-child,table.pou td:first-child{text-align:left}
+  table.pou td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
   .linha{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--muted)}
   .linha b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -261,6 +269,35 @@
   </section>
 
   <!-- HISTÓRICO -->
+  <!-- POUPANÇA -->
+  <section class="tab" id="t-pou">
+    <div class="card">
+      <h2>Fundo de Emergência <small id="pObjTxt"></small></h2>
+      <div class="prog"><i id="pProg" style="width:0"></i></div>
+      <div class="nota" id="pObjNota"></div>
+    </div>
+    <div class="card">
+      <h2>Este mês <small id="pMesLabel"></small></h2>
+      <div id="pMes"></div>
+      <button class="btn sec" id="pDepositar" style="display:none">Depositar o que falta</button>
+    </div>
+    <div class="card">
+      <h2>Regras</h2>
+      <div class="row2">
+        <div><label class="l">% Fundo Emergência</label><div class="valor"><input id="pPE" inputmode="decimal" placeholder="20"><span>%</span></div></div>
+        <div><label class="l">% Fundo Férias</label><div class="valor"><input id="pPF" inputmode="decimal" placeholder="0"><span>%</span></div></div>
+      </div>
+      <label class="l">Objetivo do Fundo de Emergência</label>
+      <div class="valor"><input id="pObj" inputmode="decimal" placeholder="0,00"><span>€</span></div>
+      <div class="nota" id="pSug"></div>
+      <button class="btn" id="pGuardar">Guardar regras</button>
+      <p class="nota">As percentagens aplicam-se à receita total de cada mês. Enquanto o fundo de emergência não chegar ao objetivo, a ideia é 20% / 0%; depois passa a 10% / 10%. Ficam guardadas na aba Config da folha.</p>
+    </div>
+    <div class="card">
+      <h2>Mês a mês</h2>
+      <div style="overflow-x:auto;margin:0 -16px;padding:0 16px"><table class="pou" id="pTabela"></table></div>
+    </div>
+  </section>
   <section class="tab" id="t-hist">
     <div class="card">
       <h2>Comparar meses</h2>
@@ -293,6 +330,7 @@
   <button data-tab="t-fun"><span class="i">◎</span>Fundos</button>
   <button data-tab="t-gas"><span class="i">▲</span>Gás</button>
   <button data-tab="t-fecho"><span class="i">✓</span>Fecho</button>
+  <button data-tab="t-pou"><span class="i">%</span>Poupança</button>
   <button data-tab="t-hist"><span class="i">◷</span>Histórico</button>
 </div></nav>
 
@@ -462,7 +500,7 @@ $('fGuardar').onclick = () => {
   if (!num($('fValor').value)) return toast('Falta o valor', false, true);
   guardar($('fGuardar'), 'addFundo',
     { data:$('fData').value, fundo:st.fFundo, movimento:st.fMov, valor:$('fValor').value, descricao:$('fDesc').value || $('fDesc').placeholder, saiDe:st.fSai },
-    () => { $('fValor').value=''; $('fDesc').value=''; st.fFundo=''; st.fMov='Depósito'; },
+    () => { $('fValor').value=''; $('fDesc').value=''; st.fFundo=''; st.fMov='Depósito'; P = null; },
     'Movimento guardado');
 };
 $('gGuardar').onclick = () => {
@@ -504,12 +542,70 @@ $('xGuardar').onclick = () => {
     .catch(e => toast(e, false, true)).finally(() => $('xGuardar').disabled = false);
 };
 
+/* ---------- poupança ---------- */
+let P = null;
+const pct1 = v => (v*100).toLocaleString('pt-PT', {maximumFractionDigits:1}) + '%';
+function carregarPoupanca(){
+  if (P) return;
+  api('getPoupanca').then(d => { P = d; desenharPoupanca(); }).catch(e => toast('Erro: ' + e, false, true));
+}
+function desenharPoupanca(){
+  const r = P.regras, meses = P.meses, m = meses[meses.length - 1];
+  $('pPE').value = r.pEmerg ? Math.round(r.pEmerg*1000)/10 : ''; $('pPF').value = r.pFerias ? Math.round(r.pFerias*1000)/10 : '';
+  $('pObj').value = r.objetivo ? r.objetivo.toLocaleString('pt-PT', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+  $('pSug').textContent = P.mediaDespesa ? `Sugestão: 10 a 12 meses de despesas = ${eur(P.mediaDespesa*10)} a ${eur(P.mediaDespesa*12)} (despesa média mensal ${eur(P.mediaDespesa)}).` : '';
+  // objetivo
+  const saldo = P.fundos.emerg, obj = r.objetivo;
+  if (obj > 0){
+    const f = Math.min(1, saldo/obj), falta = Math.max(0, obj - saldo);
+    $('pProg').style.width = (f*100) + '%';
+    $('pObjTxt').textContent = `${eur(saldo)} de ${eur(obj)} · ${pct1(f)}`;
+    const dep = meses.filter(x => x.depEmerg > 0).slice(-6);
+    const ritmo = dep.length ? dep.reduce((a,x) => a + x.depEmerg, 0) / dep.length : 0;
+    $('pObjNota').textContent = falta <= 0 ? '✅ Objetivo atingido — podes passar para 10% emergência / 10% férias.' :
+      `Faltam ${eur(falta)}.` + (ritmo > 0 ? ` Ao ritmo atual (${eur(ritmo)}/mês) chegas lá em ~${Math.ceil(falta/ritmo)} meses.` : '');
+  } else { $('pProg').style.width = '0'; $('pObjTxt').textContent = eur(saldo); $('pObjNota').textContent = 'Define o objetivo nas regras abaixo.'; }
+  // este mês
+  if (m && r.definidas){
+    const pe = m.receita*r.pEmerg, pf = m.receita*r.pFerias, fe = pe - m.depEmerg, ff = pf - m.depFerias;
+    $('pMesLabel').textContent = m.label;
+    const linha = (t, v, cls) => `<div class="kv"><span>${t}</span><b class="${cls||''}">${v}</b></div>`;
+    $('pMes').innerHTML =
+      linha('Receita do mês', eur(m.receita)) +
+      linha(`Previsto p/ Emergência (${pct1(r.pEmerg)})`, eur(pe)) +
+      linha('Já depositado', eur(m.depEmerg)) +
+      linha('Em falta', fe > 0.005 ? eur(fe) : '✓ feito', fe > 0.005 ? 'falta' : 'ok') +
+      (r.pFerias > 0 ? linha(`Previsto p/ Férias (${pct1(r.pFerias)})`, eur(pf)) + linha('Já depositado', eur(m.depFerias)) + linha('Em falta', ff > 0.005 ? eur(ff) : '✓ feito', ff > 0.005 ? 'falta' : 'ok') : '');
+    const b = $('pDepositar'); b.style.display = (fe > 0.005 || ff > 0.005) ? '' : 'none';
+    b.onclick = () => {
+      const fundo = fe > 0.005 ? 'Fundo Emergência' : 'Fundo Férias', val = fe > 0.005 ? fe : ff;
+      setPill($('fFundo'), 'fFundo', fundo); setPill($('fMov'), 'fMov', 'Depósito');
+      $('fValor').value = val.toFixed(2).replace('.', ','); $('fDesc').value = fundo + ' ' + m.label; $('fData').value = hoje();
+      document.querySelector('nav button[data-tab="t-fun"]').click();
+      toast('Preenchido — confirma e guarda.');
+    };
+  } else { $('pMesLabel').textContent = ''; $('pMes').innerHTML = '<div class="nota">Define as regras abaixo e guarda.</div>'; $('pDepositar').style.display = 'none'; }
+  // tabela
+  const temF = r.pFerias > 0;
+  $('pTabela').innerHTML = `<tr><th>Mês</th><th>Receita</th><th>Emerg. prev.</th><th>Dep.</th><th>Falta</th>${temF ? '<th>Fér. prev.</th><th>Dep.</th>' : ''}<th>Saldo emerg.</th></tr>` +
+    meses.slice().reverse().map(x => { const pe = x.receita*r.pEmerg, fe = pe - x.depEmerg;
+      return `<tr><td>${x.label}</td><td>${eur(x.receita)}</td><td>${eur(pe)}</td><td>${eur(x.depEmerg)}</td><td class="${fe > 0.005 ? 'neg' : ''}">${fe > 0.005 ? eur(fe) : '✓'}</td>${temF ? `<td>${eur(x.receita*r.pFerias)}</td><td>${eur(x.depFerias)}</td>` : ''}<td>${eur(x.saldoEmerg)}</td></tr>`; }).join('');
+}
+$('pGuardar').onclick = () => {
+  const n = s => Number(String(s).replace(/\s/g,'').replace(',', '.')) || 0;
+  const o = { pEmerg: n($('pPE').value)/100, pFerias: n($('pPF').value)/100, objetivo: n($('pObj').value) };
+  if (o.pEmerg + o.pFerias > 1) return toast('As percentagens somam mais de 100%.', false, true);
+  $('pGuardar').disabled = true;
+  api('setPoupanca', o).then(d => { P = d; desenharPoupanca(); toast('Regras guardadas.'); }).catch(e => toast('Erro: ' + e, false, true)).finally(() => $('pGuardar').disabled = false);
+};
+
 /* ---------- navegação ---------- */
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
   document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x===b));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab));
   if (b.dataset.tab === 't-fecho') carregarFecho();
   if (b.dataset.tab === 't-hist') carregarHistorico();
+  if (b.dataset.tab === 't-pou') carregarPoupanca();
   window.scrollTo(0, 0);
 });
 document.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => $(b.dataset.alvo).value = hoje(Number(b.dataset.dia)));
