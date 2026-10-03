@@ -316,7 +316,7 @@
         <h2>Procurar receita nova <small>com IA</small></h2>
         <div class="addrow"><input class="f" id="bIA" placeholder="Ex.: frango no forno, sopa de abóbora…" autocomplete="off"><button id="bIAbtn" title="Procurar">🔍</button></div>
         <div class="pills" id="bIAtipo" style="margin-top:10px"></div>
-        <p class="nota">A app pede uma receita à IA (Gemini) para o tipo escolhido — na Bimby vem com tempo / temperatura / velocidade — e tem em conta o que há na despensa. Depois revês e guardas.</p>
+        <p class="nota">A app pede uma receita à IA (Gemini). Com "Qualquer" é ela que escolhe a forma mais prática; com Bimby vem com tempo / temperatura / velocidade. Tem em conta o que há na despensa. Depois revês e guardas.</p>
         <div class="vazio" id="bIAestado" style="display:none"></div>
       </div>
     </div>
@@ -853,8 +853,8 @@ function formReceita(r){
   $('bfApagar').style.display = r && r.row ? '' : 'none'; bMostrar('bForm'); if (!r) $('bfNome').focus();
 }
 $('bNova').onclick = () => { bAtual = null; formReceita(null); };
-let bIAtipoSel = 'Bimby';
-TIPOS_REC.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bIAtipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bIAtipoSel = t; [...$('bIAtipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bIAtipo').appendChild(b); });
+let bIAtipoSel = 'Qualquer';
+['Qualquer', ...TIPOS_REC].forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (t === bIAtipoSel ? ' on' : ''); b.textContent = t; b.onclick = () => { bIAtipoSel = t; [...$('bIAtipo').children].forEach(x => x.classList.toggle('on', x === b)); }; $('bIAtipo').appendChild(b); });
 $('bIAbtn').onclick = () => {
   const pedido = $('bIA').value.trim(); if (!pedido) return toast('Escreve o que queres cozinhar', false, true);
   $('bIAbtn').disabled = true; const st = $('bIAestado'); st.style.display = ''; st.textContent = 'A procurar "' + pedido + '"… (10–20 s)';
