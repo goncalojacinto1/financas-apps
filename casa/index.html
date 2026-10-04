@@ -316,7 +316,8 @@
         <h2>Procurar receita nova <small>com IA</small></h2>
         <div class="addrow"><input class="f" id="bIA" placeholder="Ex.: frango no forno, sopa de abóbora…" autocomplete="off"><button id="bIAbtn" title="Procurar">🔍</button></div>
         <div class="pills" id="bIAtipo" style="margin-top:10px"></div>
-        <p class="nota">A app pede uma receita à IA (Gemini). Com "Qualquer" é ela que escolhe a forma mais prática; com Bimby vem com tempo / temperatura / velocidade. Tem em conta o que há na despensa. Depois revês e guardas.</p>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;cursor:pointer"><input type="checkbox" id="bIAdesp" style="width:18px;height:18px"> Aproveitar o que temos na despensa</label>
+        <p class="nota">A app pede 3 receitas à IA (Gemini). Com "Qualquer" é ela que escolhe a forma mais prática; com Bimby vem com tempo / temperatura / velocidade. Com a despensa ligada, pelo menos uma das opções usa o que já há em casa; as outras são livres.</p>
         <div class="vazio" id="bIAestado" style="display:none"></div>
         <div id="bIAres"></div>
         <button class="btn sec" id="bIAmais" style="display:none">Mostrar mais opções</button>
@@ -876,7 +877,7 @@ function pesquisarIA(mais){
   const pedido = $('bIA').value.trim(); if (!pedido) return toast('Escreve o que queres cozinhar', false, true);
   if (!mais) { bIAlista = []; $('bIAres').innerHTML = ''; $('bIAmais').style.display = 'none'; }
   $('bIAbtn').disabled = true; $('bIAmais').disabled = true; const st = $('bIAestado'); st.style.display = ''; st.textContent = (mais ? 'A procurar mais opções' : 'A procurar "' + pedido + '"') + '… (10–30 s)';
-  api('procurarReceita', { pedido, tipo: bIAtipoSel, n: 3, despensa: C && C.despensa ? C.despensa.map(d => d.item) : [], excluir: bIAlista.map(r => r.nome) })
+  api('procurarReceita', { pedido, tipo: bIAtipoSel, n: 3, despensa: $('bIAdesp').checked && C && C.despensa ? C.despensa.map(d => d.item) : [], excluir: bIAlista.map(r => r.nome) })
     .then(lista => {
       st.style.display = 'none'; bIAlista = bIAlista.concat(lista);
       $('bIAres').innerHTML = bIAlista.map((r, i) => `<div class="rec" data-i="${i}"><div class="q"><div>${esc(r.nome)}</div><small>${[r.tipo, r.cat, r.tempo, r.porcoes ? r.porcoes + ' porções' : ''].filter(Boolean).join(' · ')}${r.resumo ? '<br>' + esc(r.resumo) : ''}</small></div><span style="color:var(--muted)">›</span></div>`).join('');
