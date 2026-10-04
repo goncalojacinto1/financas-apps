@@ -69,6 +69,10 @@
   textarea.f{min-height:110px;resize:vertical}
   .ing li.tem{color:var(--good)} .ing li.falta{color:var(--bad)} .ing li .m{display:inline-block;width:18px;font-weight:700}
   .chip .x{margin-left:6px;opacity:.6} .chip.on{background:var(--accent);color:#fff}
+  .qt{display:inline-flex;align-items:center;gap:2px;flex:none} .qt button{width:28px;height:28px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:16px;cursor:pointer;color:var(--accent);padding:0;line-height:1}
+  .qt span{min-width:54px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums}
+  .chk .qtd{color:var(--accent-2);font-weight:600;margin-left:6px;font-size:13px}
+  .addq{display:flex;gap:6px;margin-top:6px} .addq input.f{width:90px;flex:none} .addq select.f{flex:1;width:auto;min-width:0}
   .linha{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--muted)}
   .linha b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -285,7 +289,8 @@
   <section class="tab" id="t-comp">
     <div class="card">
       <h2>Lista de compras <small id="cN"></small></h2>
-      <div class="addrow"><input class="f" id="cItem" placeholder="Ex.: Leite, 2 pacotes" list="dlComp" autocomplete="off"><button id="cAdd" title="Adicionar">+</button></div>
+      <div class="addrow"><input class="f" id="cItem" placeholder="Ex.: 2 pacotes de leite" list="dlComp" autocomplete="off"><button id="cAdd" title="Adicionar">+</button></div>
+      <div class="addq"><input class="f" id="cQtd" inputmode="decimal" placeholder="Qtd"><select class="f" id="cUn"></select></div>
       <datalist id="dlComp"></datalist>
       <div class="chips" id="cSug" style="margin-top:10px"></div>
       <div id="cLista" style="margin-top:8px"></div>
@@ -297,9 +302,9 @@
     </div>
     <div class="card">
       <h2>Despensa <small id="dN"></small></h2>
-      <div class="addrow"><input class="f" id="dItem" placeholder="O que temos em casa: arroz, azeite…" autocomplete="off"><button id="dAdd" title="Adicionar">+</button></div>
-      <div class="chips" id="dLista" style="margin-top:10px"></div>
-      <p class="nota">Serve para as receitas dizerem o que já temos e o que falta. Toca no × quando acabar.</p>
+      <div class="addrow"><input class="f" id="dItem" placeholder="Ex.: arroz 2 kg, 6 ovos, azeite" autocomplete="off"><button id="dAdd" title="Adicionar">+</button></div>
+      <div id="dLista" style="margin-top:8px"></div>
+      <p class="nota">Serve para as receitas dizerem o que já temos e o que falta. Escreve a quantidade junto ("3 latas de atum"); usa − / + para acertar e × quando acabar. A zero, sai sozinho.</p>
     </div>
   </section>
 
@@ -765,6 +770,9 @@ $('pGuardar').onclick = () => {
 /* ---------- lista de compras ---------- */
 let C = null;
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const fmtQ = (q, un) => q === null || q === undefined || q === '' ? '' : (Number(q).toLocaleString('pt-PT', { maximumFractionDigits: 2 }) + (un ? ' ' + (Number(q) !== 1 && !['kg','g','L','ml','un'].includes(un) ? un + 's' : un) : ''));
+const passoQ = un => ['kg','L'].includes(un) ? 0.5 : ['g','ml'].includes(un) ? 100 : 1;
+function unidadesSelect(sel, atual){ const U = (C && C.unidades) || ['un','kg','g','L','ml','pacote','garrafa','lata','embalagem','caixa','saco','dúzia']; sel.innerHTML = '<option value="">unidade</option>' + U.map(u => `<option value="${u}" ${u === atual ? 'selected' : ''}>${u}</option>`).join(''); }
 const TIPOS_REC = ['Bimby', 'Fogão', 'Forno', 'Airfryer', 'Sem cozinhar', 'Outro'];
 let bTipo = 'Todas', bfTipoSel = 'Bimby';
 const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -780,7 +788,8 @@ function carregarCompras(){ if (C) { desenharCompras(); return; } $('cLista').in
 function desenharCompras(){
   $('cN').textContent = C.pendentes.length ? C.pendentes.length + ' a comprar' : '';
   const item = (it, feito) => { const d = document.createElement('div'); d.className = 'chk' + (feito ? ' feito' : '');
-    d.innerHTML = `<div class="box">${feito ? '✓' : ''}</div><div class="q"><div class="t">${esc(it.item)}</div><small>${it.nota ? esc(it.nota) + ' · ' : ''}${it.quem || ''}${feito && it.compradoEm ? ' · comprado ' + fmtData(it.compradoEm) : ''}</small></div><button class="x" title="Apagar">×</button>`;
+    d.innerHTML = `<div class="box">${feito ? '✓' : ''}</div><div class="q"><div class="t">${esc(it.item)}${fmtQ(it.qtd, it.un) ? `<span class="qtd">${fmtQ(it.qtd, it.un)}</span>` : ''}</div><small>${it.nota ? esc(it.nota) + ' · ' : ''}${it.quem || ''}${feito && it.compradoEm ? ' · comprado ' + fmtData(it.compradoEm) : ''}</small></div>${feito ? '' : `<div class="qt"><button data-d="-1">−</button><button data-d="1">+</button></div>`}<button class="x" title="Apagar">×</button>`;
+    if (!feito) d.querySelectorAll('.qt button').forEach(b => b.onclick = e => { e.stopPropagation(); const un = it.un || 'un'; const q = Math.max(0, (it.qtd || 0) + Number(b.dataset.d) * passoQ(un)); api('setCompraQtd', it.row, q, un).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true)); });
     d.querySelector('.box').onclick = () => mudarCompra(it.row, feito ? 'A comprar' : 'Comprado');
     d.querySelector('.q').onclick = () => { if (feito) mudarCompra(it.row, 'A comprar'); };
     d.querySelector('.x').onclick = () => mudarCompra(it.row, 'apagar');
@@ -790,21 +799,30 @@ function desenharCompras(){
   $('cSug').innerHTML = ''; C.sugestoes.slice(0, 14).forEach(sg => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = sg; b.onclick = () => adicionarCompra([sg]); $('cSug').appendChild(b); });
   $('dlComp').innerHTML = C.sugestoes.map(sg => `<option value="${esc(sg)}">`).join('');
   $('dN').textContent = C.despensa.length ? C.despensa.length + ' itens' : '';
+  unidadesSelect($('cUn'), $('cUn').value);
   const DL = $('dLista'); DL.innerHTML = ''; if (!C.despensa.length) DL.innerHTML = '<div class="vazio">Despensa vazia — escreve o que tens em casa.</div>';
-  C.despensa.forEach(d => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.innerHTML = esc(d.item) + '<span class="x">×</span>'; b.title = 'Acabou — tirar da despensa';
-    b.onclick = () => api('delDespensa', d.row).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true)); DL.appendChild(b); });
+  C.despensa.forEach(d => { const el = document.createElement('div'); el.className = 'chk';
+    const un = d.un || (d.qtd !== null ? 'un' : '');
+    el.innerHTML = `<div class="q"><div class="t">${esc(d.item)}</div>${d.nota ? `<small>${esc(d.nota)}</small>` : ''}</div><div class="qt"><button data-d="-1">−</button><span>${fmtQ(d.qtd, un) || '—'}</span><button data-d="1">+</button></div><button class="x" title="Acabou — tirar da despensa">×</button>`;
+    el.querySelectorAll('.qt button').forEach(b => b.onclick = () => { const u = un || 'un'; const q = Math.max(0, (d.qtd || 0) + Number(b.dataset.d) * passoQ(u)); api('setDespensa', d.row, q, u).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true)); });
+    el.querySelector('.x').onclick = () => api('delDespensa', d.row).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true));
+    DL.appendChild(el); });
   if (bAtual && $('bVer').style.display !== 'none') verReceita(bAtual);
 }
 $('dAdd').onclick = () => { const v = $('dItem').value; if (!v.trim()) return; api('addDespensa', { itens: v.split(/[,;\n]+/) }).then(r => { C = r.compras; desenharCompras(); toast('Despensa atualizada'); }).catch(e => toast(String(e), false, true)); $('dItem').value = ''; };
 $('dItem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('dAdd').click(); } });
 function mudarCompra(row, estado){ api('setCompra', row, estado).then(r => { C = r.compras; desenharCompras(); }).catch(e => toast(String(e), false, true)); }
 function adicionarCompra(itens, nota){
-  const lista = itens.map(s => s.trim()).filter(Boolean); if (!lista.length) return;
+  const lista = itens.map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean); if (!lista.length) return;
   $('cAdd').disabled = true;
   api('addCompra', { itens: lista, nota: nota || '' }).then(r => { C = r.compras; desenharCompras(); toast(lista.length > 1 ? lista.length + ' itens adicionados à lista' : 'Adicionado à lista'); })
     .catch(e => toast(String(e), false, true)).finally(() => $('cAdd').disabled = false);
 }
-$('cAdd').onclick = () => { const v = $('cItem').value; if (!v.trim()) return; adicionarCompra(v.split(/[;\n]+/)); $('cItem').value = ''; $('cItem').focus(); };
+$('cAdd').onclick = () => { const v = $('cItem').value; if (!v.trim()) return;
+  const partes = v.split(/[;\n]+/).map(x => x.trim()).filter(Boolean);
+  const q = $('cQtd').value.trim().replace(',', '.'), un = $('cUn').value;
+  if (partes.length === 1 && q) adicionarCompra([{ item: partes[0], qtd: Number(q), un: un || 'un' }]); else adicionarCompra(partes);
+  $('cItem').value = ''; $('cQtd').value = ''; $('cItem').focus(); };
 $('cItem').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('cAdd').click(); } });
 $('cLimpar').onclick = () => { if (!C || !C.comprados.length) return; api('limparComprados').then(r => { C = r.compras; desenharCompras(); toast('Comprados limpos'); }).catch(e => toast(String(e), false, true)); };
 
