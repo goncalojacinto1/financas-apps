@@ -534,7 +534,9 @@ function render(){
 
   // despesa
   pills($('dCat'), D.listas.cats, 'dCat');
-  pills($('dPago'), D.listas.saiDe, 'dPago');
+  const saiDe = [...D.listas.contas, ...D.listas.fundos];
+  if (!saiDe.includes(st.dPago)) st.dPago = D.listas.contas[0] || '';
+  pills($('dPago'), saiDe, 'dPago');
   $('dlDesc').innerHTML = D.sugestoes.map(s => `<option value="${s.d.replace(/"/g,'&quot;')}">`).join('');
   $('dChips').innerHTML = '';
   D.sugestoes.slice(0, 12).forEach(s => {
@@ -610,7 +612,7 @@ function renderListas(){
 function aplicarSugestao(){
   const v = $('dDesc').value.trim().toLowerCase();
   const s = D.sugestoes.find(x => x.d.toLowerCase() === v);
-  if (s){ setPill($('dCat'), 'dCat', s.c); if (s.p && D.listas.saiDe.includes(s.p) && !s.p.startsWith('Fundo')) setPill($('dPago'), 'dPago', s.p); }
+  if (s){ setPill($('dCat'), 'dCat', s.c); if (s.p && D.listas.contas.includes(s.p)) setPill($('dPago'), 'dPago', s.p); }
 }
 
 /* ---------- guardar ---------- */
