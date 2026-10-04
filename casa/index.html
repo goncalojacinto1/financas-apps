@@ -274,7 +274,7 @@
     </div>
     <div class="card">
       <h2>Acertar saldos das contas</h2>
-      <p class="nota" style="margin-top:0">Escreve o saldo real de cada conta (o que a app do banco mostra hoje). A partir daí a app vai somando e descontando os movimentos.</p>
+      <p class="nota" style="margin-top:0">Escreve o saldo real de cada conta (o que a app do banco mostra hoje). A partir de hoje a app soma e desconta os movimentos; o que está para trás deixa de contar.</p>
       <div id="aContas"></div>
       <button class="btn sec" id="aGuardar">Guardar saldos</button>
     </div>
@@ -526,7 +526,7 @@ function render(){
   if (CS){
     $('stContas').innerHTML = CS.contas.map(c => `<div class="stat"><small>${c.nome}</small><b class="${c.saldo < 0 ? 'neg' : ''}">${eur(c.saldo)}</b></div>`).join('') +
       (!CS.definidos ? `<div class="stat aviso">Saldos por conta ainda não acertados — vai a Fundos → "Acertar saldos das contas".</div>` :
-       Math.abs(CS.semConta) > 0.005 ? `<div class="stat aviso">${eur(CS.semConta)} em lançamentos sem conta indicada (não entram em nenhuma das três).</div>` : '');
+       Math.abs(CS.semConta) > 0.005 ? `<div class="stat aviso">${eur(CS.semConta)} em lançamentos${CS.desde ? ' desde ' + fmtData(CS.desde) : ''} sem conta indicada.</div>` : '');
     $('aContas').innerHTML = CS.contas.map(c => `<label class="l">${c.nome} <span style="font-weight:400;text-transform:none;letter-spacing:0">(calculado: ${eur(c.saldo)})</span></label><div class="valor"><input data-conta="${c.nome}" inputmode="decimal" placeholder="${c.saldo.toFixed(2).replace('.', ',')}" autocomplete="off"><span>€</span></div>`).join('');
     pills($('tDe'), D.listas.contas, 'tDe'); pills($('tPara'), D.listas.contas, 'tPara');
     if (!$('tData').value) $('tData').value = hoje();
