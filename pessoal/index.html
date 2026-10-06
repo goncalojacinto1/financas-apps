@@ -142,7 +142,7 @@
 <header><div class="top"><h1>Finanças Pessoais</h1><div><span class="mes" id="hMes"></span><button class="olho" id="olho">👁 Mostrar</button></div></div></header>
 <div class="stats">
   <div class="stat main"><div><small id="sDiaNome">Conta do dia a dia</small><b class="priv" id="sDia">–</b></div><div style="text-align:right"><small>Património líquido</small><b class="priv" id="sPat" style="font-size:17px">–</b></div></div>
-  <div class="stat" id="stDisp" style="cursor:pointer"><small>Disponível para gastar</small><b class="priv" id="sLivre">–</b><small class="priv" id="sLivreDe" style="margin-top:2px"></small><div class="priv" id="sPend" style="display:none;margin-top:6px;font-size:12px;color:var(--muted)"></div></div>
+  <div class="stat"><small>Livre restante</small><b class="priv" id="sLivre">–</b><small class="priv" id="sLivreDe" style="margin-top:2px"></small></div>
   <div class="stat"><small>Despesas do mês</small><b class="priv" id="sDesp">–</b></div>
   <div class="stat"><small>Receitas do mês</small><b class="priv" id="sRec">–</b></div>
   <div class="stat"><small>Saldo do mês</small><b class="priv" id="sSaldo">–</b></div>
@@ -300,12 +300,9 @@ function render(){
   $('sSaldo').textContent = eur(m ? m.saldo : 0); $('sSaldo').classList.toggle('neg', !!(m && m.saldo < 0));
   if (D.contaDia){ $('sDiaNome').textContent = D.contaDia.nome; $('sDia').textContent = eur(D.contaDia.saldo); $('sDia').classList.toggle('neg', D.contaDia.saldo < 0); }
   const temLivre = m && typeof m.livre === 'number';
-  const pend = D.pendentes || [], somaPend = pend.reduce((a, x) => a + x.valor, 0);
-  const disp = typeof D.disponivel === 'number' ? D.disponivel : (D.contaDia ? D.contaDia.saldo : null);
-  $('sLivre').textContent = disp === null ? '–' : eur(disp);
-  $('sLivre').classList.toggle('neg', disp !== null && disp < 0);
-  $('sLivreDe').innerHTML = (somaPend > 0.005 ? `${eur(somaPend)} ainda por sair · ` : 'nada por sair · ') + (temLivre ? `regra 35%: ${eur(m.restante)} de ${eur(m.livre)}` : 'sem recibo do mês anterior');
-  $('sPend').innerHTML = pend.length ? '<b>Ainda por sair este mês:</b><br>' + pend.map(x => `${x.nome}: ${eur(x.valor)}`).join('<br>') + `<br><span style="color:var(--ink)">${D.contaDia ? D.contaDia.nome : ''} ${eur(D.contaDia ? D.contaDia.saldo : 0)} − ${eur(somaPend)} = ${eur(disp)}</span>` : '<b>Nada por sair:</b> o disponível é o saldo da conta.';
+  $('sLivre').textContent = temLivre ? eur(m.restante) : '–';
+  $('sLivre').classList.toggle('neg', !!(temLivre && m.restante < 0));
+  $('sLivreDe').textContent = temLivre ? `de ${eur(m.livre)} (35%)` : 'sem recibo do mês anterior';
   $('sRec').textContent = eur(m ? m.receita : 0);
   $('sDesp').textContent = eur(m ? m.despesa : 0);
   $('sPat').textContent = D.patrimonio ? eur(D.patrimonio.valor) : '–';
@@ -552,7 +549,6 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
   window.scrollTo(0,0);
 });
 document.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => $('mData').value = hoje(Number(b.dataset.dia)));
-$('stDisp').onclick = () => { const e = $('sPend'); e.style.display = e.style.display === 'none' ? '' : 'none'; };
 
 $('olho').onclick = () => { const o = document.body.classList.toggle('oculto'); $('olho').textContent = o ? '👁 Mostrar' : '🙈 Esconder'; };
 
