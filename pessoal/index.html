@@ -352,7 +352,7 @@ function renderLancar(){
   D.recentes.forEach(r => {
     const conta = r.tipo==='Despesa' ? r.o : r.tipo==='Receita' ? r.d : (r.o + ' → ' + r.d);
     const sinal = r.tipo==='Despesa' ? '−' : r.tipo==='Receita' ? '+' : '⇄ ';
-    const apos = typeof r.saldo === 'number' && D.contaDia ? `<small class="priv" style="display:block;color:var(--muted);font-size:11px">${D.contaDia.nome}: ${eur(r.saldo)}</small>` : '';
+    const apos = r.saldos && r.saldos.length ? `<small class="priv" style="display:block;color:var(--muted);font-size:11px">${r.saldos.map(x => `${x.conta}: ${eur(x.saldo)}`).join('<br>')}</small>` : '';
     L.appendChild(itemLista(`${r.desc}`, `${fmtData(r.data)} · ${r.cat}${conta ? ' · ' + conta : ''}`,
       `<span class="t-${r.tipo}">${sinal}${eur(r.valor)}</span>${apos}`, [r.row]));
   });
