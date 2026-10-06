@@ -64,7 +64,7 @@
   .lista li:first-child{border-top:0}
   .lista .q{flex:1;min-width:0}.lista .q div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lista .q small{color:var(--muted);font-size:12px}
-  .lista .v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .lista .v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
   .x{border:0;background:none;color:var(--muted);font-size:18px;width:32px;height:32px;border-radius:8px;cursor:pointer}
   .x.conf{background:var(--bad);color:#fff;font-size:12px;width:auto;padding:0 10px}
   .vazio{color:var(--muted);font-size:13px;padding:6px 0}
@@ -352,8 +352,9 @@ function renderLancar(){
   D.recentes.forEach(r => {
     const conta = r.tipo==='Despesa' ? r.o : r.tipo==='Receita' ? r.d : (r.o + ' → ' + r.d);
     const sinal = r.tipo==='Despesa' ? '−' : r.tipo==='Receita' ? '+' : '⇄ ';
+    const apos = typeof r.saldo === 'number' && D.contaDia ? `<small class="priv" style="display:block;color:var(--muted);font-size:11px">${D.contaDia.nome}: ${eur(r.saldo)}</small>` : '';
     L.appendChild(itemLista(`${r.desc}`, `${fmtData(r.data)} · ${r.cat}${conta ? ' · ' + conta : ''}`,
-      `<span class="t-${r.tipo}">${sinal}${eur(r.valor)}</span>`, [r.row]));
+      `<span class="t-${r.tipo}">${sinal}${eur(r.valor)}</span>${apos}`, [r.row]));
   });
 }
 function aplicarSug(){
